@@ -9,11 +9,15 @@ extern crate serde;
 extern crate serde_json;
 
 
+use grpc::{Client, ClientStub};
+use grpc::ClientConf;
+
 use failure::Error;
 
 use crate::protos::{api, api_grpc::{self, Dgraph}};
 
 pub mod protos;
+
 
 pub struct Transaction<'a> {
     context: api::TxnContext,
@@ -24,6 +28,17 @@ pub struct Transaction<'a> {
 }
 
 impl<'a> Transaction<'a> {
+
+    pub fn new(client: &'a api_grpc::DgraphClient) -> Transaction<'a> {
+        Transaction {
+            context: Default::default(),
+            finished: false,
+            read_only: false,
+            mutated: false,
+            client
+        }
+    }
+
 
     pub fn query(&mut self, query: impl Into<String>) -> Result<api::Response, Error> {
 
