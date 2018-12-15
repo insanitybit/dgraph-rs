@@ -15,15 +15,15 @@ use crate::protos::{api, api_grpc::{self, Dgraph}};
 
 pub mod protos;
 
-pub struct Transaction {
+pub struct Transaction<'a> {
     context: api::TxnContext,
     finished: bool,
     read_only: bool,
     mutated: bool,
-    client: api_grpc::DgraphClient,
+    client: &'a api_grpc::DgraphClient,
 }
 
-impl Transaction {
+impl<'a> Transaction<'a> {
 
     pub fn query(&mut self, query: impl Into<String>) -> Result<api::Response, Error> {
 
@@ -260,23 +260,24 @@ mod tests {
 
         let mut handles = vec![];
         for _ in 0..50 {
-            let client = api_grpc::DgraphClient::with_client(
-                Arc::new(
-                    Client::new_plain(addr.as_ref(), port, ClientConf {
-                        ..Default::default()
-                    })?
-                )
-            );
-
-            let mut tx = Transaction {
-                context: api::TxnContext::default(),
-                finished: false,
-                read_only: false,
-                mutated: false,
-                client,
-            };
-
             let handle = std::thread::spawn(move || {
+
+                let client = &api_grpc::DgraphClient::with_client(
+                    Arc::new(
+                        Client::new_plain(addr.as_ref(), port, ClientConf {
+                            ..Default::default()
+                        })?
+                    )
+                );
+
+                let mut tx = Transaction {
+                    context: api::TxnContext::default(),
+                    finished: false,
+                    read_only: false,
+                    mutated: false,
+                    client,
+                };
+
                 let query = r#"
                     {
                         q1(func: eq(key, "1234")) {
@@ -300,17 +301,29 @@ mod tests {
 
                 let uid2 = json_res.get("q2").and_then(|a| a.get(0)).and_then(|m| m.get("uid"));
 
-                if let (Some(_), Some(_)) = (uid1, uid2) {
-                    return Ok(())
-                }
 
-                tx.mutate(
-                    api::Mutation {
-                        set_json: r#"[{"key": "1234"}, {"key": "4567"}]"#.into(),
-                        commit_now: false,
-                        ..Default::default()
-                    }
-                )?;
+                if let (Some(uid1), Some(uid2)) = (uid1, uid2) {
+                    let update = format!(
+                        r#"[{{"key": "1234", "uid": {}, "update": "true"}}, {{"key": "4567", "uid": {}, "update": "true"}}]"#,
+                        uid1, uid2
+                    );
+
+                    tx.mutate(
+                        api::Mutation {
+                            set_json: update.into_bytes(),
+                            commit_now: false,
+                            ..Default::default()
+                        }
+                    )?;
+                } else {
+                    tx.mutate(
+                        api::Mutation {
+                            set_json: r#"[{"key": "1234"}, {"key": "4567"}]"#.into(),
+                            commit_now: false,
+                            ..Default::default()
+                        }
+                    )?;
+                }
 
                 tx.commit()?;
 
@@ -328,9 +341,11 @@ mod tests {
             {
                 q1(func: eq(key, "1234")) {
                     uid,
+                    update
                 },
                 q2(func: eq(key, "4567")) {
                     uid,
+                    update
                 }
             }
             "#;
@@ -348,6 +363,8 @@ mod tests {
         // Assert that we get uids back for both
         &json_res["q1"][0]["uid"];
         &json_res["q2"][0]["uid"];
+        &json_res["q1"][0]["update"];
+        &json_res["q2"][0]["update"];
 
         // Assert that we get uids back for only those 2
         assert!(&json_res.keys().len() == &2);
