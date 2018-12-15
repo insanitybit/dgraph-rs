@@ -4,6 +4,11 @@ version = "0.1.0"
 authors = ["Insanitybit <insanitybit@gmail.com>"]
 edition = "2018"
 
+description = "Provides a client for the DGraph graph database"
+license = "MIT OR Apache-2.0"
+keywords = ["dgraph", "graph", "graphdb", "database"]
+
+
 [dependencies]
 grpc            = "~0.6"
 protobuf        = "~2"
