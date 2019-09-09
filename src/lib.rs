@@ -1,150 +1,196 @@
-#[macro_use]
-extern crate failure;
+#![feature(async_await)]
+
 extern crate futures;
-extern crate futures_cpupool;
+
 extern crate grpc;
 extern crate httpbis;
 extern crate protobuf;
 extern crate serde;
 extern crate serde_json;
 
-
-use grpc::{Client, ClientStub};
-use grpc::ClientConf;
-
-use failure::Error;
-
 use crate::protos::{api, api_grpc::{self, Dgraph}};
+//use std::sync::{Arc, Mutex};
 
+use futures::compat::Future01CompatExt;
+
+use errors::DgraphError;
+use std::collections::HashMap;
+use rand::{Rng, SeedableRng};
+use rand::seq::SliceRandom;
+
+pub mod errors;
 pub mod protos;
 
 
-pub struct Transaction<'a> {
-    context: api::TxnContext,
-    finished: bool,
-    read_only: bool,
-    mutated: bool,
-    client: &'a api_grpc::DgraphClient,
+pub struct DgraphClient
+{
+    //    _jwt_mutex: Option<Arc<Mutex<api::Jwt>>>,
+    dc: Vec<api_grpc::DgraphClient>,
+    rng_seed: [u8; 16],
 }
 
-impl<'a> Transaction<'a> {
+impl DgraphClient
+{
+    pub fn new(dc: Vec<api_grpc::DgraphClient>) -> Self {
+        assert!(!dc.is_empty());
+        Self {
+//            jwt_mutex: None,
+            rng_seed: rand::thread_rng().gen(),
+            dc,
+        }
+    }
 
-    pub fn new(client: &'a api_grpc::DgraphClient) -> Transaction<'a> {
-        Transaction {
+    pub fn new_txn(&self) -> Txn {
+        Txn {
             context: Default::default(),
             finished: false,
             read_only: false,
+            best_effort: false,
             mutated: false,
-            client
+            dc: self.any_client(),
         }
     }
 
+    fn any_client(&self) -> &api_grpc::DgraphClient {
+        let mut rng = rand_xoshiro::Xoroshiro128Plus::from_seed(self.rng_seed);
 
-    pub fn query(&mut self, query: impl Into<String>) -> Result<api::Response, Error> {
+        self.dc.choose(&mut rng).unwrap()
+    }
+}
 
-        if self.finished {
-            bail!("Transaction is completed");
-        }
+pub struct Txn<'a> {
+    context: api::TxnContext,
+    finished: bool,
+    read_only: bool,
+    best_effort: bool,
+    mutated: bool,
+    dc: &'a api_grpc::DgraphClient,
+}
 
-        let res = self.client.query(Default::default(),
-                               api::Request {
-                                   query: query.into(),
-                                   ..Default::default()
-                               }
-        ).wait()?;
-
-        let txn = match res.1.txn.as_ref() {
-            Some(txn) => txn,
-            None => bail!("Got empty transaction response back from query")
-        };
-
-        self.merge_context(txn)?;
-        Ok(res.1)
+impl<'a> Txn<'a> {
+    pub async fn query(&mut self, q: impl Into<String>) -> Result<api::Response, DgraphError> {
+        self.query_with_vars(q, HashMap::new()).await
     }
 
-    pub fn mutate(&mut self, mut mu: api::Mutation) -> Result<api::Assigned, Error> {
-
-        match (self.finished, self.read_only) {
-            (true, _) => bail!("Transaction is finished"),
-            (_, true) => bail!("Transaction is read only"),
-            _ => ()
-        }
-
-        self.mutated = true;
-        mu.start_ts = self.context.start_ts;
-        let commit_now = mu.commit_now;
-        let mu_res = self.client.mutate(
-            Default::default(),
-            mu
-        ).wait();
-
-        let mu_res = match mu_res {
-            Ok(mu_res) => mu_res,
-            Err(e) => {
-                let _ = self.discard();
-                bail!(e);
+    pub async fn query_with_vars(
+        &mut self,
+        q: impl Into<String>,
+        vars: HashMap<String, String>,
+    ) -> Result<api::Response, DgraphError> {
+        self._do(
+            api::Request {
+                query: q.into(),
+                start_ts: self.context.start_ts,
+                read_only: self.read_only,
+                best_effort: self.best_effort,
+                vars,
+                ..Default::default()
             }
-        };
+        ).await
+    }
+
+    pub async fn mutate(&mut self, mu: api::Mutation) -> Result<api::Response, DgraphError> {
+        self._do(
+            api::Request {
+                start_ts: self.context.start_ts,
+                commit_now: mu.commit_now,
+                mutations: vec![mu].into(),
+                ..Default::default()
+            }
+        ).await
+    }
+
+    pub async fn upsert(mut self, q: impl Into<String>, mut mu: api::Mutation) -> Result<api::Response, DgraphError> {
+        mu.commit_now = true;
+        self._do(
+            api::Request {
+                query: q.into(),
+                mutations: vec![mu].into(),
+                commit_now: true,
+                ..Default::default()
+            }
+        ).await
+    }
+
+
+    pub async fn commit(&mut self) -> Result<(), DgraphError> {
+        match (self.read_only, self.finished) {
+            (true, _) => return Err(DgraphError::ReadOnly),
+            (_, true) => return Err(DgraphError::Finished),
+            _ => self.commit_or_abort().await,
+        }
+    }
+
+    pub async fn commit_or_abort(&mut self) -> Result<(), DgraphError> {
+        if self.finished {
+            return Ok(());
+        }
+        self.finished = true;
+
+        if !self.mutated {
+            return Ok(());
+        }
+
+        self.dc.commit_or_abort(
+            Default::default(),
+            self.context.clone(),
+        ).join_metadata_result().compat().await?;
+
+        Ok(())
+    }
+
+    pub async fn discard(&mut self) -> Result<(), DgraphError> {
+        self.context.aborted = true;
+        self.commit_or_abort().await
+    }
+
+    async fn _do(&mut self, mut req: api::Request) -> Result<api::Response, DgraphError> {
+        if self.finished {
+            return Err(DgraphError::Finished);
+        }
+
+        if !req.mutations.is_empty() {
+            if self.read_only {
+                return Err(DgraphError::ReadOnly);
+            }
+            self.mutated = true;
+        }
+
+        req.start_ts = self.context.start_ts;
+
+        let commit_now = req.commit_now;
+
+        let query_res = self.dc.query(
+            Default::default(),
+            req,
+        ).join_metadata_result().compat().await;
+
+        // TODO: Handle JWT failure by logging in again
+        if let Err(_) = query_res {
+            let _ = self.discard().await;
+        }
+        let query_res = query_res?;
 
         if commit_now {
             self.finished = true;
         }
 
-        let context = match mu_res.1.context.as_ref() {
-            Some(context) => context,
-            None => bail!("Missing transaction context on mutation response")
+        let txn = match query_res.1.txn.as_ref() {
+            Some(txn) => txn,
+            None => return Err(DgraphError::EmptyTransaction)
         };
 
-        self.merge_context(context)?;
-        Ok(mu_res.1)
+        self.merge_context(txn)?;
+        Ok(query_res.1)
     }
 
-    pub fn commit(mut self) -> Result<(), Error> {
-        match (self.finished, self.read_only) {
-            (true, _) => bail!("Transaction is finished"),
-            (_, true) => bail!("Transaction is read only"),
-            _ => ()
-        }
-
-        self.finished = true;
-
-        if !self.mutated {
-            return Ok(())
-        }
-
-
-        self.client.commit_or_abort(Default::default(), self.context.clone())
-            .wait()?;
-
-        Ok(())
-    }
-
-    fn discard(&mut self) -> Result<(), Error> {
-        if self.finished {
-            return Ok(())
-        }
-
-        self.finished = true;
-
-        if !self.mutated {
-            return Ok(())
-        }
-
-        self.context.aborted = true;
-
-        self.client.commit_or_abort(Default::default(), self.context.clone())
-            .wait()?;
-
-        Ok(())
-    }
-
-    fn merge_context(&mut self, src: &api::TxnContext) -> Result<(), Error> {
+    fn merge_context(&mut self, src: &api::TxnContext) -> Result<(), DgraphError> {
         if self.context.start_ts == 0 {
             self.context.start_ts = src.start_ts;
         }
 
         if self.context.start_ts != src.start_ts {
-            bail!("self.context.start_ts != src.start_ts")
+            return Err(DgraphError::StartTsMismatch);
         }
 
         for key in src.keys.iter() {
@@ -162,14 +208,12 @@ impl<'a> Transaction<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use serde_json::Value;
+    use grpc::{ClientStub, Client, ClientConf};
     use std::sync::Arc;
 
-    use grpc::{Client, ClientStub};
-    use grpc::ClientConf;
-    use std::collections::HashMap;
-
-    #[test]
-    fn insert_query() -> Result<(), Error> {
+    fn local_dgraph_client() -> DgraphClient {
         let addr = "localhost";
         let port = 9080;
 
@@ -177,216 +221,60 @@ mod tests {
             Arc::new(
                 Client::new_plain(addr.as_ref(), port, ClientConf {
                     ..Default::default()
-                })?
+                }).expect("Failed to initialize client stub")
             )
         );
 
-        client.alter(
-            Default::default(),
-            api::Operation {
-                drop_all: true,
-                ..Default::default()
-            }
-        ).wait()?;
-
-        client.alter(
-            Default::default(),
-            api::Operation {
-                schema: "key: string @upsert @index(hash) .".into(),
-                ..Default::default()
-            }
-        ).wait()?;
-
-
-        client.mutate(
-            Default::default(),
-            api::Mutation {
-                set_json: r#"[{"key": "1234"}, {"key": "4567"}]"#.into(),
-                commit_now: true,
-                ..Default::default()
-            }
-        ).wait()?;
-
-
-        let query = r#"
-            {
-                q1(func: eq(key, "1234")) {
-                    uid,
-                },
-                q2(func: eq(key, "4567")) {
-                    uid,
-                }
-            }
-            "#;
-
-        let res = client.query(Default::default(),
-            api::Request {
-                query: query.into(),
-                ..Default::default()
-            }
-        ).wait()?;
-
-        let json_res: HashMap<String, serde_json::Value> = serde_json::from_slice(&res.1.json)?;
-
-        // Assert that we get uids back for both
-        &json_res["q1"][0]["uid"];
-        &json_res["q2"][0]["uid"];
-
-        // Assert that we get uids back for only those 2
-        assert!(&json_res.keys().len() == &2);
-
-        assert!(&json_res["q1"].as_array().unwrap().len() == &1);
-        assert!(&json_res["q2"].as_array().unwrap().len() == &1);
-
-        Ok(())
+        DgraphClient::new(vec![client])
     }
 
+    // This is a basic smoke test - query for node_key, assert we get a response
+    #[test]
+    fn test_query() {
+        async_std::task::block_on(async {
+            let dg = local_dgraph_client();
+            let mut txn = dg.new_txn();
+            let query_res: Value = txn.query(r#"
+                {
+                  q0(func: has(node_key)) {
+                    uid
+                  }
+                }
+            "#)
+                .await
+                .map(|res| serde_json::from_slice(&res.json))
+                .expect("Dgraph query failed")
+                .expect("Json deserialize failed");
+
+            // Assert that we get the response back
+            assert!(query_res.as_object().unwrap().contains_key("q0"));
+        });
+    }
 
     #[test]
-    fn insert_query_txn() -> Result<(), Error> {
-        let addr = "localhost";
-        let port = 9080;
+    fn test_upsert() {
+        async_std::task::block_on(async {
+            let dg = local_dgraph_client();
 
-        let client = api_grpc::DgraphClient::with_client(
-            Arc::new(
-                Client::new_plain(addr.as_ref(), port, ClientConf {
-                    ..Default::default()
-                })?
+            let query = r#"
+                {
+                  p as var(func: eq(node_key, "{453120d4-5c9f-43f6-b7af-28b376b3a993}"))
+                }
+                "#;
+
+            let mu = api::Mutation {
+                set_nquads: br#"
+                uid(p) <node_key> "{453120d4-5c9f-43f6-b7af-28b376b3a993}" .
+                uid(p) <process_name> "foo.exe" ."#.to_vec(),
+                ..Default::default()
+            };
+
+            let txn = dg.new_txn();
+            txn.upsert(
+                query, mu,
             )
-        );
-
-        client.alter(
-            Default::default(),
-            api::Operation {
-                drop_all: true,
-                ..Default::default()
-            }
-        ).wait()?;
-
-        client.alter(
-            Default::default(),
-            api::Operation {
-                schema: "key: string @upsert @index(hash) .".into(),
-                ..Default::default()
-            }
-        ).wait()?;
-
-
-
-        let mut handles = vec![];
-        for _ in 0..50 {
-            let handle = std::thread::spawn(move || {
-
-                let client = &api_grpc::DgraphClient::with_client(
-                    Arc::new(
-                        Client::new_plain(addr.as_ref(), port, ClientConf {
-                            ..Default::default()
-                        })?
-                    )
-                );
-
-                let mut tx = Transaction {
-                    context: api::TxnContext::default(),
-                    finished: false,
-                    read_only: false,
-                    mutated: false,
-                    client,
-                };
-
-                let query = r#"
-                    {
-                        q1(func: eq(key, "1234")) {
-                            uid,
-                        },
-                        q2(func: eq(key, "4567")) {
-                            uid,
-                        }
-                    }
-                    "#;
-
-                // hack for type inference
-                if false {
-                    bail!("impossible")
-                }
-
-                let res = tx.query(query)?;
-                let json_res: HashMap<String, serde_json::Value> = serde_json::from_slice(&res.json)?;
-
-                let uid1 = json_res.get("q1").and_then(|a| a.get(0)).and_then(|m| m.get("uid"));
-
-                let uid2 = json_res.get("q2").and_then(|a| a.get(0)).and_then(|m| m.get("uid"));
-
-
-                if let (Some(uid1), Some(uid2)) = (uid1, uid2) {
-                    let update = format!(
-                        r#"[{{"key": "1234", "uid": {}, "update": "true"}}, {{"key": "4567", "uid": {}, "update": "true"}}]"#,
-                        uid1, uid2
-                    );
-
-                    tx.mutate(
-                        api::Mutation {
-                            set_json: update.into_bytes(),
-                            commit_now: false,
-                            ..Default::default()
-                        }
-                    )?;
-                } else {
-                    tx.mutate(
-                        api::Mutation {
-                            set_json: r#"[{"key": "1234"}, {"key": "4567"}]"#.into(),
-                            commit_now: false,
-                            ..Default::default()
-                        }
-                    )?;
-                }
-
-                tx.commit()?;
-
-                Ok(())
-            });
-            handles.push(handle);
-        }
-
-        for handle in handles {
-            let _ = handle.join();  // TODO: Ensure only transaction failures occurred
-        }
-
-        // Assert that they are created
-        let query = r#"
-            {
-                q1(func: eq(key, "1234")) {
-                    uid,
-                    update
-                },
-                q2(func: eq(key, "4567")) {
-                    uid,
-                    update
-                }
-            }
-            "#;
-
-        let res = client.query(Default::default(),
-                               api::Request {
-                                   query: query.into(),
-                                   ..Default::default()
-                               }
-        ).wait()?;
-
-        let json_res: HashMap<String, serde_json::Value> = serde_json::from_slice(&res.1.json)?;
-        println!("{:#?}", json_res);
-
-        // Assert that we get uids back for both
-        &json_res["q1"][0]["uid"];
-        &json_res["q2"][0]["uid"];
-        &json_res["q1"][0]["update"];
-        &json_res["q2"][0]["update"];
-
-        // Assert that we get uids back for only those 2
-        assert!(&json_res.keys().len() == &2);
-
-        assert!(&json_res["q1"].as_array().unwrap().len() == &1);
-        assert!(&json_res["q2"].as_array().unwrap().len() == &1);
-
-        Ok(())
+                .await
+                .expect("Request to dgraph failed");
+        });
     }
 }

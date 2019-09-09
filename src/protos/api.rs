@@ -24,11 +24,13 @@ use protobuf::ProtobufEnum as ProtobufEnum_imported_for_functions;
 #[derive(PartialEq,Clone,Default)]
 pub struct Request {
     // message fields
+    pub start_ts: u64,
     pub query: ::std::string::String,
     pub vars: ::std::collections::HashMap<::std::string::String, ::std::string::String>,
-    pub start_ts: u64,
-    pub lin_read: ::protobuf::SingularPtrField<LinRead>,
     pub read_only: bool,
+    pub best_effort: bool,
+    pub mutations: ::protobuf::RepeatedField<Mutation>,
+    pub commit_now: bool,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
     pub cached_size: ::protobuf::CachedSize,
@@ -39,7 +41,22 @@ impl Request {
         ::std::default::Default::default()
     }
 
-    // string query = 1;
+    // uint64 start_ts = 1;
+
+    pub fn clear_start_ts(&mut self) {
+        self.start_ts = 0;
+    }
+
+    // Param is passed by value, moved
+    pub fn set_start_ts(&mut self, v: u64) {
+        self.start_ts = v;
+    }
+
+    pub fn get_start_ts(&self) -> u64 {
+        self.start_ts
+    }
+
+    // string query = 4;
 
     pub fn clear_query(&mut self) {
         self.query.clear();
@@ -65,7 +82,7 @@ impl Request {
         &self.query
     }
 
-    // repeated .api.Request.VarsEntry vars = 2;
+    // repeated .api.Request.VarsEntry vars = 5;
 
     pub fn clear_vars(&mut self) {
         self.vars.clear();
@@ -90,55 +107,7 @@ impl Request {
         &self.vars
     }
 
-    // uint64 start_ts = 13;
-
-    pub fn clear_start_ts(&mut self) {
-        self.start_ts = 0;
-    }
-
-    // Param is passed by value, moved
-    pub fn set_start_ts(&mut self, v: u64) {
-        self.start_ts = v;
-    }
-
-    pub fn get_start_ts(&self) -> u64 {
-        self.start_ts
-    }
-
-    // .api.LinRead lin_read = 14;
-
-    pub fn clear_lin_read(&mut self) {
-        self.lin_read.clear();
-    }
-
-    pub fn has_lin_read(&self) -> bool {
-        self.lin_read.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_lin_read(&mut self, v: LinRead) {
-        self.lin_read = ::protobuf::SingularPtrField::some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_lin_read(&mut self) -> &mut LinRead {
-        if self.lin_read.is_none() {
-            self.lin_read.set_default();
-        }
-        self.lin_read.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_lin_read(&mut self) -> LinRead {
-        self.lin_read.take().unwrap_or_else(|| LinRead::new())
-    }
-
-    pub fn get_lin_read(&self) -> &LinRead {
-        self.lin_read.as_ref().unwrap_or_else(|| LinRead::default_instance())
-    }
-
-    // bool read_only = 15;
+    // bool read_only = 6;
 
     pub fn clear_read_only(&mut self) {
         self.read_only = false;
@@ -152,11 +121,66 @@ impl Request {
     pub fn get_read_only(&self) -> bool {
         self.read_only
     }
+
+    // bool best_effort = 7;
+
+    pub fn clear_best_effort(&mut self) {
+        self.best_effort = false;
+    }
+
+    // Param is passed by value, moved
+    pub fn set_best_effort(&mut self, v: bool) {
+        self.best_effort = v;
+    }
+
+    pub fn get_best_effort(&self) -> bool {
+        self.best_effort
+    }
+
+    // repeated .api.Mutation mutations = 12;
+
+    pub fn clear_mutations(&mut self) {
+        self.mutations.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_mutations(&mut self, v: ::protobuf::RepeatedField<Mutation>) {
+        self.mutations = v;
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_mutations(&mut self) -> &mut ::protobuf::RepeatedField<Mutation> {
+        &mut self.mutations
+    }
+
+    // Take field
+    pub fn take_mutations(&mut self) -> ::protobuf::RepeatedField<Mutation> {
+        ::std::mem::replace(&mut self.mutations, ::protobuf::RepeatedField::new())
+    }
+
+    pub fn get_mutations(&self) -> &[Mutation] {
+        &self.mutations
+    }
+
+    // bool commit_now = 13;
+
+    pub fn clear_commit_now(&mut self) {
+        self.commit_now = false;
+    }
+
+    // Param is passed by value, moved
+    pub fn set_commit_now(&mut self, v: bool) {
+        self.commit_now = v;
+    }
+
+    pub fn get_commit_now(&self) -> bool {
+        self.commit_now
+    }
 }
 
 impl ::protobuf::Message for Request {
     fn is_initialized(&self) -> bool {
-        for v in &self.lin_read {
+        for v in &self.mutations {
             if !v.is_initialized() {
                 return false;
             }
@@ -169,27 +193,41 @@ impl ::protobuf::Message for Request {
             let (field_number, wire_type) = is.read_tag_unpack()?;
             match field_number {
                 1 => {
-                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.query)?;
-                },
-                2 => {
-                    ::protobuf::rt::read_map_into::<::protobuf::types::ProtobufTypeString, ::protobuf::types::ProtobufTypeString>(wire_type, is, &mut self.vars)?;
-                },
-                13 => {
                     if wire_type != ::protobuf::wire_format::WireTypeVarint {
                         return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
                     }
                     let tmp = is.read_uint64()?;
                     self.start_ts = tmp;
                 },
-                14 => {
-                    ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.lin_read)?;
+                4 => {
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.query)?;
                 },
-                15 => {
+                5 => {
+                    ::protobuf::rt::read_map_into::<::protobuf::types::ProtobufTypeString, ::protobuf::types::ProtobufTypeString>(wire_type, is, &mut self.vars)?;
+                },
+                6 => {
                     if wire_type != ::protobuf::wire_format::WireTypeVarint {
                         return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
                     }
                     let tmp = is.read_bool()?;
                     self.read_only = tmp;
+                },
+                7 => {
+                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    let tmp = is.read_bool()?;
+                    self.best_effort = tmp;
+                },
+                12 => {
+                    ::protobuf::rt::read_repeated_message_into(wire_type, is, &mut self.mutations)?;
+                },
+                13 => {
+                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    let tmp = is.read_bool()?;
+                    self.commit_now = tmp;
                 },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
@@ -203,18 +241,24 @@ impl ::protobuf::Message for Request {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u32 {
         let mut my_size = 0;
-        if !self.query.is_empty() {
-            my_size += ::protobuf::rt::string_size(1, &self.query);
-        }
-        my_size += ::protobuf::rt::compute_map_size::<::protobuf::types::ProtobufTypeString, ::protobuf::types::ProtobufTypeString>(2, &self.vars);
         if self.start_ts != 0 {
-            my_size += ::protobuf::rt::value_size(13, self.start_ts, ::protobuf::wire_format::WireTypeVarint);
+            my_size += ::protobuf::rt::value_size(1, self.start_ts, ::protobuf::wire_format::WireTypeVarint);
         }
-        if let Some(ref v) = self.lin_read.as_ref() {
-            let len = v.compute_size();
-            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+        if !self.query.is_empty() {
+            my_size += ::protobuf::rt::string_size(4, &self.query);
         }
+        my_size += ::protobuf::rt::compute_map_size::<::protobuf::types::ProtobufTypeString, ::protobuf::types::ProtobufTypeString>(5, &self.vars);
         if self.read_only != false {
+            my_size += 2;
+        }
+        if self.best_effort != false {
+            my_size += 2;
+        }
+        for value in &self.mutations {
+            let len = value.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+        };
+        if self.commit_now != false {
             my_size += 2;
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
@@ -223,20 +267,26 @@ impl ::protobuf::Message for Request {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream) -> ::protobuf::ProtobufResult<()> {
-        if !self.query.is_empty() {
-            os.write_string(1, &self.query)?;
-        }
-        ::protobuf::rt::write_map_with_cached_sizes::<::protobuf::types::ProtobufTypeString, ::protobuf::types::ProtobufTypeString>(2, &self.vars, os)?;
         if self.start_ts != 0 {
-            os.write_uint64(13, self.start_ts)?;
+            os.write_uint64(1, self.start_ts)?;
         }
-        if let Some(ref v) = self.lin_read.as_ref() {
-            os.write_tag(14, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+        if !self.query.is_empty() {
+            os.write_string(4, &self.query)?;
+        }
+        ::protobuf::rt::write_map_with_cached_sizes::<::protobuf::types::ProtobufTypeString, ::protobuf::types::ProtobufTypeString>(5, &self.vars, os)?;
+        if self.read_only != false {
+            os.write_bool(6, self.read_only)?;
+        }
+        if self.best_effort != false {
+            os.write_bool(7, self.best_effort)?;
+        }
+        for v in &self.mutations {
+            os.write_tag(12, ::protobuf::wire_format::WireTypeLengthDelimited)?;
             os.write_raw_varint32(v.get_cached_size())?;
             v.write_to_with_cached_sizes(os)?;
-        }
-        if self.read_only != false {
-            os.write_bool(15, self.read_only)?;
+        };
+        if self.commit_now != false {
+            os.write_bool(13, self.commit_now)?;
         }
         os.write_unknown_fields(self.get_unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -280,6 +330,11 @@ impl ::protobuf::Message for Request {
         unsafe {
             descriptor.get(|| {
                 let mut fields = ::std::vec::Vec::new();
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeUint64>(
+                    "start_ts",
+                    |m: &Request| { &m.start_ts },
+                    |m: &mut Request| { &mut m.start_ts },
+                ));
                 fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
                     "query",
                     |m: &Request| { &m.query },
@@ -290,20 +345,25 @@ impl ::protobuf::Message for Request {
                     |m: &Request| { &m.vars },
                     |m: &mut Request| { &mut m.vars },
                 ));
-                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeUint64>(
-                    "start_ts",
-                    |m: &Request| { &m.start_ts },
-                    |m: &mut Request| { &mut m.start_ts },
-                ));
-                fields.push(::protobuf::reflect::accessor::make_singular_ptr_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<LinRead>>(
-                    "lin_read",
-                    |m: &Request| { &m.lin_read },
-                    |m: &mut Request| { &mut m.lin_read },
-                ));
                 fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBool>(
                     "read_only",
                     |m: &Request| { &m.read_only },
                     |m: &mut Request| { &mut m.read_only },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBool>(
+                    "best_effort",
+                    |m: &Request| { &m.best_effort },
+                    |m: &mut Request| { &mut m.best_effort },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_repeated_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<Mutation>>(
+                    "mutations",
+                    |m: &Request| { &m.mutations },
+                    |m: &mut Request| { &mut m.mutations },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBool>(
+                    "commit_now",
+                    |m: &Request| { &m.commit_now },
+                    |m: &mut Request| { &mut m.commit_now },
                 ));
                 ::protobuf::reflect::MessageDescriptor::new::<Request>(
                     "Request",
@@ -327,11 +387,13 @@ impl ::protobuf::Message for Request {
 
 impl ::protobuf::Clear for Request {
     fn clear(&mut self) {
+        self.clear_start_ts();
         self.clear_query();
         self.clear_vars();
-        self.clear_start_ts();
-        self.clear_lin_read();
         self.clear_read_only();
+        self.clear_best_effort();
+        self.clear_mutations();
+        self.clear_commit_now();
         self.unknown_fields.clear();
     }
 }
@@ -352,9 +414,9 @@ impl ::protobuf::reflect::ProtobufValue for Request {
 pub struct Response {
     // message fields
     pub json: ::std::vec::Vec<u8>,
-    pub schema: ::protobuf::RepeatedField<SchemaNode>,
     pub txn: ::protobuf::SingularPtrField<TxnContext>,
     pub latency: ::protobuf::SingularPtrField<Latency>,
+    pub uids: ::std::collections::HashMap<::std::string::String, ::std::string::String>,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
     pub cached_size: ::protobuf::CachedSize,
@@ -391,32 +453,7 @@ impl Response {
         &self.json
     }
 
-    // repeated .api.SchemaNode schema = 2;
-
-    pub fn clear_schema(&mut self) {
-        self.schema.clear();
-    }
-
-    // Param is passed by value, moved
-    pub fn set_schema(&mut self, v: ::protobuf::RepeatedField<SchemaNode>) {
-        self.schema = v;
-    }
-
-    // Mutable pointer to the field.
-    pub fn mut_schema(&mut self) -> &mut ::protobuf::RepeatedField<SchemaNode> {
-        &mut self.schema
-    }
-
-    // Take field
-    pub fn take_schema(&mut self) -> ::protobuf::RepeatedField<SchemaNode> {
-        ::std::mem::replace(&mut self.schema, ::protobuf::RepeatedField::new())
-    }
-
-    pub fn get_schema(&self) -> &[SchemaNode] {
-        &self.schema
-    }
-
-    // .api.TxnContext txn = 3;
+    // .api.TxnContext txn = 2;
 
     pub fn clear_txn(&mut self) {
         self.txn.clear();
@@ -449,7 +486,7 @@ impl Response {
         self.txn.as_ref().unwrap_or_else(|| TxnContext::default_instance())
     }
 
-    // .api.Latency latency = 12;
+    // .api.Latency latency = 3;
 
     pub fn clear_latency(&mut self) {
         self.latency.clear();
@@ -481,15 +518,35 @@ impl Response {
     pub fn get_latency(&self) -> &Latency {
         self.latency.as_ref().unwrap_or_else(|| Latency::default_instance())
     }
+
+    // repeated .api.Response.UidsEntry uids = 12;
+
+    pub fn clear_uids(&mut self) {
+        self.uids.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_uids(&mut self, v: ::std::collections::HashMap<::std::string::String, ::std::string::String>) {
+        self.uids = v;
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_uids(&mut self) -> &mut ::std::collections::HashMap<::std::string::String, ::std::string::String> {
+        &mut self.uids
+    }
+
+    // Take field
+    pub fn take_uids(&mut self) -> ::std::collections::HashMap<::std::string::String, ::std::string::String> {
+        ::std::mem::replace(&mut self.uids, ::std::collections::HashMap::new())
+    }
+
+    pub fn get_uids(&self) -> &::std::collections::HashMap<::std::string::String, ::std::string::String> {
+        &self.uids
+    }
 }
 
 impl ::protobuf::Message for Response {
     fn is_initialized(&self) -> bool {
-        for v in &self.schema {
-            if !v.is_initialized() {
-                return false;
-            }
-        };
         for v in &self.txn {
             if !v.is_initialized() {
                 return false;
@@ -511,13 +568,13 @@ impl ::protobuf::Message for Response {
                     ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.json)?;
                 },
                 2 => {
-                    ::protobuf::rt::read_repeated_message_into(wire_type, is, &mut self.schema)?;
-                },
-                3 => {
                     ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.txn)?;
                 },
-                12 => {
+                3 => {
                     ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.latency)?;
+                },
+                12 => {
+                    ::protobuf::rt::read_map_into::<::protobuf::types::ProtobufTypeString, ::protobuf::types::ProtobufTypeString>(wire_type, is, &mut self.uids)?;
                 },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
@@ -534,10 +591,6 @@ impl ::protobuf::Message for Response {
         if !self.json.is_empty() {
             my_size += ::protobuf::rt::bytes_size(1, &self.json);
         }
-        for value in &self.schema {
-            let len = value.compute_size();
-            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
-        };
         if let Some(ref v) = self.txn.as_ref() {
             let len = v.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
@@ -546,6 +599,7 @@ impl ::protobuf::Message for Response {
             let len = v.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
         }
+        my_size += ::protobuf::rt::compute_map_size::<::protobuf::types::ProtobufTypeString, ::protobuf::types::ProtobufTypeString>(12, &self.uids);
         my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
         self.cached_size.set(my_size);
         my_size
@@ -555,21 +609,17 @@ impl ::protobuf::Message for Response {
         if !self.json.is_empty() {
             os.write_bytes(1, &self.json)?;
         }
-        for v in &self.schema {
-            os.write_tag(2, ::protobuf::wire_format::WireTypeLengthDelimited)?;
-            os.write_raw_varint32(v.get_cached_size())?;
-            v.write_to_with_cached_sizes(os)?;
-        };
         if let Some(ref v) = self.txn.as_ref() {
-            os.write_tag(3, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+            os.write_tag(2, ::protobuf::wire_format::WireTypeLengthDelimited)?;
             os.write_raw_varint32(v.get_cached_size())?;
             v.write_to_with_cached_sizes(os)?;
         }
         if let Some(ref v) = self.latency.as_ref() {
-            os.write_tag(12, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+            os.write_tag(3, ::protobuf::wire_format::WireTypeLengthDelimited)?;
             os.write_raw_varint32(v.get_cached_size())?;
             v.write_to_with_cached_sizes(os)?;
         }
+        ::protobuf::rt::write_map_with_cached_sizes::<::protobuf::types::ProtobufTypeString, ::protobuf::types::ProtobufTypeString>(12, &self.uids, os)?;
         os.write_unknown_fields(self.get_unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -617,11 +667,6 @@ impl ::protobuf::Message for Response {
                     |m: &Response| { &m.json },
                     |m: &mut Response| { &mut m.json },
                 ));
-                fields.push(::protobuf::reflect::accessor::make_repeated_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<SchemaNode>>(
-                    "schema",
-                    |m: &Response| { &m.schema },
-                    |m: &mut Response| { &mut m.schema },
-                ));
                 fields.push(::protobuf::reflect::accessor::make_singular_ptr_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<TxnContext>>(
                     "txn",
                     |m: &Response| { &m.txn },
@@ -631,6 +676,11 @@ impl ::protobuf::Message for Response {
                     "latency",
                     |m: &Response| { &m.latency },
                     |m: &mut Response| { &mut m.latency },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_map_accessor::<_, ::protobuf::types::ProtobufTypeString, ::protobuf::types::ProtobufTypeString>(
+                    "uids",
+                    |m: &Response| { &m.uids },
+                    |m: &mut Response| { &mut m.uids },
                 ));
                 ::protobuf::reflect::MessageDescriptor::new::<Response>(
                     "Response",
@@ -655,9 +705,9 @@ impl ::protobuf::Message for Response {
 impl ::protobuf::Clear for Response {
     fn clear(&mut self) {
         self.clear_json();
-        self.clear_schema();
         self.clear_txn();
         self.clear_latency();
+        self.clear_uids();
         self.unknown_fields.clear();
     }
 }
@@ -675,278 +725,6 @@ impl ::protobuf::reflect::ProtobufValue for Response {
 }
 
 #[derive(PartialEq,Clone,Default)]
-pub struct Assigned {
-    // message fields
-    pub uids: ::std::collections::HashMap<::std::string::String, ::std::string::String>,
-    pub context: ::protobuf::SingularPtrField<TxnContext>,
-    pub latency: ::protobuf::SingularPtrField<Latency>,
-    // special fields
-    pub unknown_fields: ::protobuf::UnknownFields,
-    pub cached_size: ::protobuf::CachedSize,
-}
-
-impl Assigned {
-    pub fn new() -> Assigned {
-        ::std::default::Default::default()
-    }
-
-    // repeated .api.Assigned.UidsEntry uids = 1;
-
-    pub fn clear_uids(&mut self) {
-        self.uids.clear();
-    }
-
-    // Param is passed by value, moved
-    pub fn set_uids(&mut self, v: ::std::collections::HashMap<::std::string::String, ::std::string::String>) {
-        self.uids = v;
-    }
-
-    // Mutable pointer to the field.
-    pub fn mut_uids(&mut self) -> &mut ::std::collections::HashMap<::std::string::String, ::std::string::String> {
-        &mut self.uids
-    }
-
-    // Take field
-    pub fn take_uids(&mut self) -> ::std::collections::HashMap<::std::string::String, ::std::string::String> {
-        ::std::mem::replace(&mut self.uids, ::std::collections::HashMap::new())
-    }
-
-    pub fn get_uids(&self) -> &::std::collections::HashMap<::std::string::String, ::std::string::String> {
-        &self.uids
-    }
-
-    // .api.TxnContext context = 2;
-
-    pub fn clear_context(&mut self) {
-        self.context.clear();
-    }
-
-    pub fn has_context(&self) -> bool {
-        self.context.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_context(&mut self, v: TxnContext) {
-        self.context = ::protobuf::SingularPtrField::some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_context(&mut self) -> &mut TxnContext {
-        if self.context.is_none() {
-            self.context.set_default();
-        }
-        self.context.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_context(&mut self) -> TxnContext {
-        self.context.take().unwrap_or_else(|| TxnContext::new())
-    }
-
-    pub fn get_context(&self) -> &TxnContext {
-        self.context.as_ref().unwrap_or_else(|| TxnContext::default_instance())
-    }
-
-    // .api.Latency latency = 12;
-
-    pub fn clear_latency(&mut self) {
-        self.latency.clear();
-    }
-
-    pub fn has_latency(&self) -> bool {
-        self.latency.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_latency(&mut self, v: Latency) {
-        self.latency = ::protobuf::SingularPtrField::some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_latency(&mut self) -> &mut Latency {
-        if self.latency.is_none() {
-            self.latency.set_default();
-        }
-        self.latency.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_latency(&mut self) -> Latency {
-        self.latency.take().unwrap_or_else(|| Latency::new())
-    }
-
-    pub fn get_latency(&self) -> &Latency {
-        self.latency.as_ref().unwrap_or_else(|| Latency::default_instance())
-    }
-}
-
-impl ::protobuf::Message for Assigned {
-    fn is_initialized(&self) -> bool {
-        for v in &self.context {
-            if !v.is_initialized() {
-                return false;
-            }
-        };
-        for v in &self.latency {
-            if !v.is_initialized() {
-                return false;
-            }
-        };
-        true
-    }
-
-    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream) -> ::protobuf::ProtobufResult<()> {
-        while !is.eof()? {
-            let (field_number, wire_type) = is.read_tag_unpack()?;
-            match field_number {
-                1 => {
-                    ::protobuf::rt::read_map_into::<::protobuf::types::ProtobufTypeString, ::protobuf::types::ProtobufTypeString>(wire_type, is, &mut self.uids)?;
-                },
-                2 => {
-                    ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.context)?;
-                },
-                12 => {
-                    ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.latency)?;
-                },
-                _ => {
-                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
-                },
-            };
-        }
-        ::std::result::Result::Ok(())
-    }
-
-    // Compute sizes of nested messages
-    #[allow(unused_variables)]
-    fn compute_size(&self) -> u32 {
-        let mut my_size = 0;
-        my_size += ::protobuf::rt::compute_map_size::<::protobuf::types::ProtobufTypeString, ::protobuf::types::ProtobufTypeString>(1, &self.uids);
-        if let Some(ref v) = self.context.as_ref() {
-            let len = v.compute_size();
-            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
-        }
-        if let Some(ref v) = self.latency.as_ref() {
-            let len = v.compute_size();
-            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
-        }
-        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
-        self.cached_size.set(my_size);
-        my_size
-    }
-
-    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream) -> ::protobuf::ProtobufResult<()> {
-        ::protobuf::rt::write_map_with_cached_sizes::<::protobuf::types::ProtobufTypeString, ::protobuf::types::ProtobufTypeString>(1, &self.uids, os)?;
-        if let Some(ref v) = self.context.as_ref() {
-            os.write_tag(2, ::protobuf::wire_format::WireTypeLengthDelimited)?;
-            os.write_raw_varint32(v.get_cached_size())?;
-            v.write_to_with_cached_sizes(os)?;
-        }
-        if let Some(ref v) = self.latency.as_ref() {
-            os.write_tag(12, ::protobuf::wire_format::WireTypeLengthDelimited)?;
-            os.write_raw_varint32(v.get_cached_size())?;
-            v.write_to_with_cached_sizes(os)?;
-        }
-        os.write_unknown_fields(self.get_unknown_fields())?;
-        ::std::result::Result::Ok(())
-    }
-
-    fn get_cached_size(&self) -> u32 {
-        self.cached_size.get()
-    }
-
-    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
-        &self.unknown_fields
-    }
-
-    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
-        &mut self.unknown_fields
-    }
-
-    fn as_any(&self) -> &::std::any::Any {
-        self as &::std::any::Any
-    }
-    fn as_any_mut(&mut self) -> &mut ::std::any::Any {
-        self as &mut ::std::any::Any
-    }
-    fn into_any(self: Box<Self>) -> ::std::boxed::Box<::std::any::Any> {
-        self
-    }
-
-    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
-        Self::descriptor_static()
-    }
-
-    fn new() -> Assigned {
-        Assigned::new()
-    }
-
-    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
-        static mut descriptor: ::protobuf::lazy::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::lazy::Lazy {
-            lock: ::protobuf::lazy::ONCE_INIT,
-            ptr: 0 as *const ::protobuf::reflect::MessageDescriptor,
-        };
-        unsafe {
-            descriptor.get(|| {
-                let mut fields = ::std::vec::Vec::new();
-                fields.push(::protobuf::reflect::accessor::make_map_accessor::<_, ::protobuf::types::ProtobufTypeString, ::protobuf::types::ProtobufTypeString>(
-                    "uids",
-                    |m: &Assigned| { &m.uids },
-                    |m: &mut Assigned| { &mut m.uids },
-                ));
-                fields.push(::protobuf::reflect::accessor::make_singular_ptr_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<TxnContext>>(
-                    "context",
-                    |m: &Assigned| { &m.context },
-                    |m: &mut Assigned| { &mut m.context },
-                ));
-                fields.push(::protobuf::reflect::accessor::make_singular_ptr_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<Latency>>(
-                    "latency",
-                    |m: &Assigned| { &m.latency },
-                    |m: &mut Assigned| { &mut m.latency },
-                ));
-                ::protobuf::reflect::MessageDescriptor::new::<Assigned>(
-                    "Assigned",
-                    fields,
-                    file_descriptor_proto()
-                )
-            })
-        }
-    }
-
-    fn default_instance() -> &'static Assigned {
-        static mut instance: ::protobuf::lazy::Lazy<Assigned> = ::protobuf::lazy::Lazy {
-            lock: ::protobuf::lazy::ONCE_INIT,
-            ptr: 0 as *const Assigned,
-        };
-        unsafe {
-            instance.get(Assigned::new)
-        }
-    }
-}
-
-impl ::protobuf::Clear for Assigned {
-    fn clear(&mut self) {
-        self.clear_uids();
-        self.clear_context();
-        self.clear_latency();
-        self.unknown_fields.clear();
-    }
-}
-
-impl ::std::fmt::Debug for Assigned {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-        ::protobuf::text_format::fmt(self, f)
-    }
-}
-
-impl ::protobuf::reflect::ProtobufValue for Assigned {
-    fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
-        ::protobuf::reflect::ProtobufValueRef::Message(self)
-    }
-}
-
-#[derive(PartialEq,Clone,Default)]
 pub struct Mutation {
     // message fields
     pub set_json: ::std::vec::Vec<u8>,
@@ -955,9 +733,8 @@ pub struct Mutation {
     pub del_nquads: ::std::vec::Vec<u8>,
     pub set: ::protobuf::RepeatedField<NQuad>,
     pub del: ::protobuf::RepeatedField<NQuad>,
-    pub start_ts: u64,
+    pub cond: ::std::string::String,
     pub commit_now: bool,
-    pub ignore_index_conflict: bool,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
     pub cached_size: ::protobuf::CachedSize,
@@ -1072,7 +849,7 @@ impl Mutation {
         &self.del_nquads
     }
 
-    // repeated .api.NQuad set = 10;
+    // repeated .api.NQuad set = 5;
 
     pub fn clear_set(&mut self) {
         self.set.clear();
@@ -1097,7 +874,7 @@ impl Mutation {
         &self.set
     }
 
-    // repeated .api.NQuad del = 11;
+    // repeated .api.NQuad del = 6;
 
     pub fn clear_del(&mut self) {
         self.del.clear();
@@ -1122,19 +899,30 @@ impl Mutation {
         &self.del
     }
 
-    // uint64 start_ts = 13;
+    // string cond = 9;
 
-    pub fn clear_start_ts(&mut self) {
-        self.start_ts = 0;
+    pub fn clear_cond(&mut self) {
+        self.cond.clear();
     }
 
     // Param is passed by value, moved
-    pub fn set_start_ts(&mut self, v: u64) {
-        self.start_ts = v;
+    pub fn set_cond(&mut self, v: ::std::string::String) {
+        self.cond = v;
     }
 
-    pub fn get_start_ts(&self) -> u64 {
-        self.start_ts
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_cond(&mut self) -> &mut ::std::string::String {
+        &mut self.cond
+    }
+
+    // Take field
+    pub fn take_cond(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.cond, ::std::string::String::new())
+    }
+
+    pub fn get_cond(&self) -> &str {
+        &self.cond
     }
 
     // bool commit_now = 14;
@@ -1150,21 +938,6 @@ impl Mutation {
 
     pub fn get_commit_now(&self) -> bool {
         self.commit_now
-    }
-
-    // bool ignore_index_conflict = 15;
-
-    pub fn clear_ignore_index_conflict(&mut self) {
-        self.ignore_index_conflict = false;
-    }
-
-    // Param is passed by value, moved
-    pub fn set_ignore_index_conflict(&mut self, v: bool) {
-        self.ignore_index_conflict = v;
-    }
-
-    pub fn get_ignore_index_conflict(&self) -> bool {
-        self.ignore_index_conflict
     }
 }
 
@@ -1199,18 +972,14 @@ impl ::protobuf::Message for Mutation {
                 4 => {
                     ::protobuf::rt::read_singular_proto3_bytes_into(wire_type, is, &mut self.del_nquads)?;
                 },
-                10 => {
+                5 => {
                     ::protobuf::rt::read_repeated_message_into(wire_type, is, &mut self.set)?;
                 },
-                11 => {
+                6 => {
                     ::protobuf::rt::read_repeated_message_into(wire_type, is, &mut self.del)?;
                 },
-                13 => {
-                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
-                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
-                    }
-                    let tmp = is.read_uint64()?;
-                    self.start_ts = tmp;
+                9 => {
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.cond)?;
                 },
                 14 => {
                     if wire_type != ::protobuf::wire_format::WireTypeVarint {
@@ -1218,13 +987,6 @@ impl ::protobuf::Message for Mutation {
                     }
                     let tmp = is.read_bool()?;
                     self.commit_now = tmp;
-                },
-                15 => {
-                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
-                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
-                    }
-                    let tmp = is.read_bool()?;
-                    self.ignore_index_conflict = tmp;
                 },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
@@ -1258,13 +1020,10 @@ impl ::protobuf::Message for Mutation {
             let len = value.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
         };
-        if self.start_ts != 0 {
-            my_size += ::protobuf::rt::value_size(13, self.start_ts, ::protobuf::wire_format::WireTypeVarint);
+        if !self.cond.is_empty() {
+            my_size += ::protobuf::rt::string_size(9, &self.cond);
         }
         if self.commit_now != false {
-            my_size += 2;
-        }
-        if self.ignore_index_conflict != false {
             my_size += 2;
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
@@ -1286,23 +1045,20 @@ impl ::protobuf::Message for Mutation {
             os.write_bytes(4, &self.del_nquads)?;
         }
         for v in &self.set {
-            os.write_tag(10, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+            os.write_tag(5, ::protobuf::wire_format::WireTypeLengthDelimited)?;
             os.write_raw_varint32(v.get_cached_size())?;
             v.write_to_with_cached_sizes(os)?;
         };
         for v in &self.del {
-            os.write_tag(11, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+            os.write_tag(6, ::protobuf::wire_format::WireTypeLengthDelimited)?;
             os.write_raw_varint32(v.get_cached_size())?;
             v.write_to_with_cached_sizes(os)?;
         };
-        if self.start_ts != 0 {
-            os.write_uint64(13, self.start_ts)?;
+        if !self.cond.is_empty() {
+            os.write_string(9, &self.cond)?;
         }
         if self.commit_now != false {
             os.write_bool(14, self.commit_now)?;
-        }
-        if self.ignore_index_conflict != false {
-            os.write_bool(15, self.ignore_index_conflict)?;
         }
         os.write_unknown_fields(self.get_unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -1376,20 +1132,15 @@ impl ::protobuf::Message for Mutation {
                     |m: &Mutation| { &m.del },
                     |m: &mut Mutation| { &mut m.del },
                 ));
-                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeUint64>(
-                    "start_ts",
-                    |m: &Mutation| { &m.start_ts },
-                    |m: &mut Mutation| { &mut m.start_ts },
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
+                    "cond",
+                    |m: &Mutation| { &m.cond },
+                    |m: &mut Mutation| { &mut m.cond },
                 ));
                 fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBool>(
                     "commit_now",
                     |m: &Mutation| { &m.commit_now },
                     |m: &mut Mutation| { &mut m.commit_now },
-                ));
-                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBool>(
-                    "ignore_index_conflict",
-                    |m: &Mutation| { &m.ignore_index_conflict },
-                    |m: &mut Mutation| { &mut m.ignore_index_conflict },
                 ));
                 ::protobuf::reflect::MessageDescriptor::new::<Mutation>(
                     "Mutation",
@@ -1419,9 +1170,8 @@ impl ::protobuf::Clear for Mutation {
         self.clear_del_nquads();
         self.clear_set();
         self.clear_del();
-        self.clear_start_ts();
+        self.clear_cond();
         self.clear_commit_now();
-        self.clear_ignore_index_conflict();
         self.unknown_fields.clear();
     }
 }
@@ -1444,6 +1194,8 @@ pub struct Operation {
     pub schema: ::std::string::String,
     pub drop_attr: ::std::string::String,
     pub drop_all: bool,
+    pub drop_op: Operation_DropOp,
+    pub drop_value: ::std::string::String,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
     pub cached_size: ::protobuf::CachedSize,
@@ -1520,6 +1272,47 @@ impl Operation {
     pub fn get_drop_all(&self) -> bool {
         self.drop_all
     }
+
+    // .api.Operation.DropOp drop_op = 4;
+
+    pub fn clear_drop_op(&mut self) {
+        self.drop_op = Operation_DropOp::NONE;
+    }
+
+    // Param is passed by value, moved
+    pub fn set_drop_op(&mut self, v: Operation_DropOp) {
+        self.drop_op = v;
+    }
+
+    pub fn get_drop_op(&self) -> Operation_DropOp {
+        self.drop_op
+    }
+
+    // string drop_value = 5;
+
+    pub fn clear_drop_value(&mut self) {
+        self.drop_value.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_drop_value(&mut self, v: ::std::string::String) {
+        self.drop_value = v;
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_drop_value(&mut self) -> &mut ::std::string::String {
+        &mut self.drop_value
+    }
+
+    // Take field
+    pub fn take_drop_value(&mut self) -> ::std::string::String {
+        ::std::mem::replace(&mut self.drop_value, ::std::string::String::new())
+    }
+
+    pub fn get_drop_value(&self) -> &str {
+        &self.drop_value
+    }
 }
 
 impl ::protobuf::Message for Operation {
@@ -1544,6 +1337,12 @@ impl ::protobuf::Message for Operation {
                     let tmp = is.read_bool()?;
                     self.drop_all = tmp;
                 },
+                4 => {
+                    ::protobuf::rt::read_proto3_enum_with_unknown_fields_into(wire_type, is, &mut self.drop_op, 4, &mut self.unknown_fields)?
+                },
+                5 => {
+                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.drop_value)?;
+                },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
                 },
@@ -1565,6 +1364,12 @@ impl ::protobuf::Message for Operation {
         if self.drop_all != false {
             my_size += 2;
         }
+        if self.drop_op != Operation_DropOp::NONE {
+            my_size += ::protobuf::rt::enum_size(4, self.drop_op);
+        }
+        if !self.drop_value.is_empty() {
+            my_size += ::protobuf::rt::string_size(5, &self.drop_value);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
         self.cached_size.set(my_size);
         my_size
@@ -1579,6 +1384,12 @@ impl ::protobuf::Message for Operation {
         }
         if self.drop_all != false {
             os.write_bool(3, self.drop_all)?;
+        }
+        if self.drop_op != Operation_DropOp::NONE {
+            os.write_enum(4, self.drop_op.value())?;
+        }
+        if !self.drop_value.is_empty() {
+            os.write_string(5, &self.drop_value)?;
         }
         os.write_unknown_fields(self.get_unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -1637,6 +1448,16 @@ impl ::protobuf::Message for Operation {
                     |m: &Operation| { &m.drop_all },
                     |m: &mut Operation| { &mut m.drop_all },
                 ));
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeEnum<Operation_DropOp>>(
+                    "drop_op",
+                    |m: &Operation| { &m.drop_op },
+                    |m: &mut Operation| { &mut m.drop_op },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
+                    "drop_value",
+                    |m: &Operation| { &m.drop_value },
+                    |m: &mut Operation| { &mut m.drop_value },
+                ));
                 ::protobuf::reflect::MessageDescriptor::new::<Operation>(
                     "Operation",
                     fields,
@@ -1662,6 +1483,8 @@ impl ::protobuf::Clear for Operation {
         self.clear_schema();
         self.clear_drop_attr();
         self.clear_drop_all();
+        self.clear_drop_op();
+        self.clear_drop_value();
         self.unknown_fields.clear();
     }
 }
@@ -1675,6 +1498,70 @@ impl ::std::fmt::Debug for Operation {
 impl ::protobuf::reflect::ProtobufValue for Operation {
     fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
         ::protobuf::reflect::ProtobufValueRef::Message(self)
+    }
+}
+
+#[derive(Clone,PartialEq,Eq,Debug,Hash)]
+pub enum Operation_DropOp {
+    NONE = 0,
+    ALL = 1,
+    DATA = 2,
+    ATTR = 3,
+    TYPE = 4,
+}
+
+impl ::protobuf::ProtobufEnum for Operation_DropOp {
+    fn value(&self) -> i32 {
+        *self as i32
+    }
+
+    fn from_i32(value: i32) -> ::std::option::Option<Operation_DropOp> {
+        match value {
+            0 => ::std::option::Option::Some(Operation_DropOp::NONE),
+            1 => ::std::option::Option::Some(Operation_DropOp::ALL),
+            2 => ::std::option::Option::Some(Operation_DropOp::DATA),
+            3 => ::std::option::Option::Some(Operation_DropOp::ATTR),
+            4 => ::std::option::Option::Some(Operation_DropOp::TYPE),
+            _ => ::std::option::Option::None
+        }
+    }
+
+    fn values() -> &'static [Self] {
+        static values: &'static [Operation_DropOp] = &[
+            Operation_DropOp::NONE,
+            Operation_DropOp::ALL,
+            Operation_DropOp::DATA,
+            Operation_DropOp::ATTR,
+            Operation_DropOp::TYPE,
+        ];
+        values
+    }
+
+    fn enum_descriptor_static() -> &'static ::protobuf::reflect::EnumDescriptor {
+        static mut descriptor: ::protobuf::lazy::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const ::protobuf::reflect::EnumDescriptor,
+        };
+        unsafe {
+            descriptor.get(|| {
+                ::protobuf::reflect::EnumDescriptor::new("Operation_DropOp", file_descriptor_proto())
+            })
+        }
+    }
+}
+
+impl ::std::marker::Copy for Operation_DropOp {
+}
+
+impl ::std::default::Default for Operation_DropOp {
+    fn default() -> Self {
+        Operation_DropOp::NONE
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for Operation_DropOp {
+    fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
+        ::protobuf::reflect::ProtobufValueRef::Enum(self.descriptor())
     }
 }
 
@@ -1849,7 +1736,6 @@ pub struct TxnContext {
     pub aborted: bool,
     pub keys: ::protobuf::RepeatedField<::std::string::String>,
     pub preds: ::protobuf::RepeatedField<::std::string::String>,
-    pub lin_read: ::protobuf::SingularPtrField<LinRead>,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
     pub cached_size: ::protobuf::CachedSize,
@@ -1954,48 +1840,10 @@ impl TxnContext {
     pub fn get_preds(&self) -> &[::std::string::String] {
         &self.preds
     }
-
-    // .api.LinRead lin_read = 13;
-
-    pub fn clear_lin_read(&mut self) {
-        self.lin_read.clear();
-    }
-
-    pub fn has_lin_read(&self) -> bool {
-        self.lin_read.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_lin_read(&mut self, v: LinRead) {
-        self.lin_read = ::protobuf::SingularPtrField::some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_lin_read(&mut self) -> &mut LinRead {
-        if self.lin_read.is_none() {
-            self.lin_read.set_default();
-        }
-        self.lin_read.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_lin_read(&mut self) -> LinRead {
-        self.lin_read.take().unwrap_or_else(|| LinRead::new())
-    }
-
-    pub fn get_lin_read(&self) -> &LinRead {
-        self.lin_read.as_ref().unwrap_or_else(|| LinRead::default_instance())
-    }
 }
 
 impl ::protobuf::Message for TxnContext {
     fn is_initialized(&self) -> bool {
-        for v in &self.lin_read {
-            if !v.is_initialized() {
-                return false;
-            }
-        };
         true
     }
 
@@ -2030,9 +1878,6 @@ impl ::protobuf::Message for TxnContext {
                 5 => {
                     ::protobuf::rt::read_repeated_string_into(wire_type, is, &mut self.preds)?;
                 },
-                13 => {
-                    ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.lin_read)?;
-                },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
                 },
@@ -2060,10 +1905,6 @@ impl ::protobuf::Message for TxnContext {
         for value in &self.preds {
             my_size += ::protobuf::rt::string_size(5, &value);
         };
-        if let Some(ref v) = self.lin_read.as_ref() {
-            let len = v.compute_size();
-            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
-        }
         my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
         self.cached_size.set(my_size);
         my_size
@@ -2085,11 +1926,6 @@ impl ::protobuf::Message for TxnContext {
         for v in &self.preds {
             os.write_string(5, &v)?;
         };
-        if let Some(ref v) = self.lin_read.as_ref() {
-            os.write_tag(13, ::protobuf::wire_format::WireTypeLengthDelimited)?;
-            os.write_raw_varint32(v.get_cached_size())?;
-            v.write_to_with_cached_sizes(os)?;
-        }
         os.write_unknown_fields(self.get_unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -2157,11 +1993,6 @@ impl ::protobuf::Message for TxnContext {
                     |m: &TxnContext| { &m.preds },
                     |m: &mut TxnContext| { &mut m.preds },
                 ));
-                fields.push(::protobuf::reflect::accessor::make_singular_ptr_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<LinRead>>(
-                    "lin_read",
-                    |m: &TxnContext| { &m.lin_read },
-                    |m: &mut TxnContext| { &mut m.lin_read },
-                ));
                 ::protobuf::reflect::MessageDescriptor::new::<TxnContext>(
                     "TxnContext",
                     fields,
@@ -2189,7 +2020,6 @@ impl ::protobuf::Clear for TxnContext {
         self.clear_aborted();
         self.clear_keys();
         self.clear_preds();
-        self.clear_lin_read();
         self.unknown_fields.clear();
     }
 }
@@ -2490,255 +2320,12 @@ impl ::protobuf::reflect::ProtobufValue for Version {
 }
 
 #[derive(PartialEq,Clone,Default)]
-pub struct LinRead {
-    // message fields
-    pub ids: ::std::collections::HashMap<u32, u64>,
-    pub sequencing: LinRead_Sequencing,
-    // special fields
-    pub unknown_fields: ::protobuf::UnknownFields,
-    pub cached_size: ::protobuf::CachedSize,
-}
-
-impl LinRead {
-    pub fn new() -> LinRead {
-        ::std::default::Default::default()
-    }
-
-    // repeated .api.LinRead.IdsEntry ids = 1;
-
-    pub fn clear_ids(&mut self) {
-        self.ids.clear();
-    }
-
-    // Param is passed by value, moved
-    pub fn set_ids(&mut self, v: ::std::collections::HashMap<u32, u64>) {
-        self.ids = v;
-    }
-
-    // Mutable pointer to the field.
-    pub fn mut_ids(&mut self) -> &mut ::std::collections::HashMap<u32, u64> {
-        &mut self.ids
-    }
-
-    // Take field
-    pub fn take_ids(&mut self) -> ::std::collections::HashMap<u32, u64> {
-        ::std::mem::replace(&mut self.ids, ::std::collections::HashMap::new())
-    }
-
-    pub fn get_ids(&self) -> &::std::collections::HashMap<u32, u64> {
-        &self.ids
-    }
-
-    // .api.LinRead.Sequencing sequencing = 2;
-
-    pub fn clear_sequencing(&mut self) {
-        self.sequencing = LinRead_Sequencing::CLIENT_SIDE;
-    }
-
-    // Param is passed by value, moved
-    pub fn set_sequencing(&mut self, v: LinRead_Sequencing) {
-        self.sequencing = v;
-    }
-
-    pub fn get_sequencing(&self) -> LinRead_Sequencing {
-        self.sequencing
-    }
-}
-
-impl ::protobuf::Message for LinRead {
-    fn is_initialized(&self) -> bool {
-        true
-    }
-
-    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream) -> ::protobuf::ProtobufResult<()> {
-        while !is.eof()? {
-            let (field_number, wire_type) = is.read_tag_unpack()?;
-            match field_number {
-                1 => {
-                    ::protobuf::rt::read_map_into::<::protobuf::types::ProtobufTypeUint32, ::protobuf::types::ProtobufTypeUint64>(wire_type, is, &mut self.ids)?;
-                },
-                2 => {
-                    ::protobuf::rt::read_proto3_enum_with_unknown_fields_into(wire_type, is, &mut self.sequencing, 2, &mut self.unknown_fields)?
-                },
-                _ => {
-                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
-                },
-            };
-        }
-        ::std::result::Result::Ok(())
-    }
-
-    // Compute sizes of nested messages
-    #[allow(unused_variables)]
-    fn compute_size(&self) -> u32 {
-        let mut my_size = 0;
-        my_size += ::protobuf::rt::compute_map_size::<::protobuf::types::ProtobufTypeUint32, ::protobuf::types::ProtobufTypeUint64>(1, &self.ids);
-        if self.sequencing != LinRead_Sequencing::CLIENT_SIDE {
-            my_size += ::protobuf::rt::enum_size(2, self.sequencing);
-        }
-        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
-        self.cached_size.set(my_size);
-        my_size
-    }
-
-    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream) -> ::protobuf::ProtobufResult<()> {
-        ::protobuf::rt::write_map_with_cached_sizes::<::protobuf::types::ProtobufTypeUint32, ::protobuf::types::ProtobufTypeUint64>(1, &self.ids, os)?;
-        if self.sequencing != LinRead_Sequencing::CLIENT_SIDE {
-            os.write_enum(2, self.sequencing.value())?;
-        }
-        os.write_unknown_fields(self.get_unknown_fields())?;
-        ::std::result::Result::Ok(())
-    }
-
-    fn get_cached_size(&self) -> u32 {
-        self.cached_size.get()
-    }
-
-    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
-        &self.unknown_fields
-    }
-
-    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
-        &mut self.unknown_fields
-    }
-
-    fn as_any(&self) -> &::std::any::Any {
-        self as &::std::any::Any
-    }
-    fn as_any_mut(&mut self) -> &mut ::std::any::Any {
-        self as &mut ::std::any::Any
-    }
-    fn into_any(self: Box<Self>) -> ::std::boxed::Box<::std::any::Any> {
-        self
-    }
-
-    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
-        Self::descriptor_static()
-    }
-
-    fn new() -> LinRead {
-        LinRead::new()
-    }
-
-    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
-        static mut descriptor: ::protobuf::lazy::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::lazy::Lazy {
-            lock: ::protobuf::lazy::ONCE_INIT,
-            ptr: 0 as *const ::protobuf::reflect::MessageDescriptor,
-        };
-        unsafe {
-            descriptor.get(|| {
-                let mut fields = ::std::vec::Vec::new();
-                fields.push(::protobuf::reflect::accessor::make_map_accessor::<_, ::protobuf::types::ProtobufTypeUint32, ::protobuf::types::ProtobufTypeUint64>(
-                    "ids",
-                    |m: &LinRead| { &m.ids },
-                    |m: &mut LinRead| { &mut m.ids },
-                ));
-                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeEnum<LinRead_Sequencing>>(
-                    "sequencing",
-                    |m: &LinRead| { &m.sequencing },
-                    |m: &mut LinRead| { &mut m.sequencing },
-                ));
-                ::protobuf::reflect::MessageDescriptor::new::<LinRead>(
-                    "LinRead",
-                    fields,
-                    file_descriptor_proto()
-                )
-            })
-        }
-    }
-
-    fn default_instance() -> &'static LinRead {
-        static mut instance: ::protobuf::lazy::Lazy<LinRead> = ::protobuf::lazy::Lazy {
-            lock: ::protobuf::lazy::ONCE_INIT,
-            ptr: 0 as *const LinRead,
-        };
-        unsafe {
-            instance.get(LinRead::new)
-        }
-    }
-}
-
-impl ::protobuf::Clear for LinRead {
-    fn clear(&mut self) {
-        self.clear_ids();
-        self.clear_sequencing();
-        self.unknown_fields.clear();
-    }
-}
-
-impl ::std::fmt::Debug for LinRead {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-        ::protobuf::text_format::fmt(self, f)
-    }
-}
-
-impl ::protobuf::reflect::ProtobufValue for LinRead {
-    fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
-        ::protobuf::reflect::ProtobufValueRef::Message(self)
-    }
-}
-
-#[derive(Clone,PartialEq,Eq,Debug,Hash)]
-pub enum LinRead_Sequencing {
-    CLIENT_SIDE = 0,
-    SERVER_SIDE = 1,
-}
-
-impl ::protobuf::ProtobufEnum for LinRead_Sequencing {
-    fn value(&self) -> i32 {
-        *self as i32
-    }
-
-    fn from_i32(value: i32) -> ::std::option::Option<LinRead_Sequencing> {
-        match value {
-            0 => ::std::option::Option::Some(LinRead_Sequencing::CLIENT_SIDE),
-            1 => ::std::option::Option::Some(LinRead_Sequencing::SERVER_SIDE),
-            _ => ::std::option::Option::None
-        }
-    }
-
-    fn values() -> &'static [Self] {
-        static values: &'static [LinRead_Sequencing] = &[
-            LinRead_Sequencing::CLIENT_SIDE,
-            LinRead_Sequencing::SERVER_SIDE,
-        ];
-        values
-    }
-
-    fn enum_descriptor_static() -> &'static ::protobuf::reflect::EnumDescriptor {
-        static mut descriptor: ::protobuf::lazy::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::lazy::Lazy {
-            lock: ::protobuf::lazy::ONCE_INIT,
-            ptr: 0 as *const ::protobuf::reflect::EnumDescriptor,
-        };
-        unsafe {
-            descriptor.get(|| {
-                ::protobuf::reflect::EnumDescriptor::new("LinRead_Sequencing", file_descriptor_proto())
-            })
-        }
-    }
-}
-
-impl ::std::marker::Copy for LinRead_Sequencing {
-}
-
-impl ::std::default::Default for LinRead_Sequencing {
-    fn default() -> Self {
-        LinRead_Sequencing::CLIENT_SIDE
-    }
-}
-
-impl ::protobuf::reflect::ProtobufValue for LinRead_Sequencing {
-    fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
-        ::protobuf::reflect::ProtobufValueRef::Enum(self.descriptor())
-    }
-}
-
-#[derive(PartialEq,Clone,Default)]
 pub struct Latency {
     // message fields
     pub parsing_ns: u64,
     pub processing_ns: u64,
     pub encoding_ns: u64,
+    pub assign_timestamp_ns: u64,
     // special fields
     pub unknown_fields: ::protobuf::UnknownFields,
     pub cached_size: ::protobuf::CachedSize,
@@ -2793,6 +2380,21 @@ impl Latency {
     pub fn get_encoding_ns(&self) -> u64 {
         self.encoding_ns
     }
+
+    // uint64 assign_timestamp_ns = 4;
+
+    pub fn clear_assign_timestamp_ns(&mut self) {
+        self.assign_timestamp_ns = 0;
+    }
+
+    // Param is passed by value, moved
+    pub fn set_assign_timestamp_ns(&mut self, v: u64) {
+        self.assign_timestamp_ns = v;
+    }
+
+    pub fn get_assign_timestamp_ns(&self) -> u64 {
+        self.assign_timestamp_ns
+    }
 }
 
 impl ::protobuf::Message for Latency {
@@ -2825,6 +2427,13 @@ impl ::protobuf::Message for Latency {
                     let tmp = is.read_uint64()?;
                     self.encoding_ns = tmp;
                 },
+                4 => {
+                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
+                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
+                    }
+                    let tmp = is.read_uint64()?;
+                    self.assign_timestamp_ns = tmp;
+                },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
                 },
@@ -2846,6 +2455,9 @@ impl ::protobuf::Message for Latency {
         if self.encoding_ns != 0 {
             my_size += ::protobuf::rt::value_size(3, self.encoding_ns, ::protobuf::wire_format::WireTypeVarint);
         }
+        if self.assign_timestamp_ns != 0 {
+            my_size += ::protobuf::rt::value_size(4, self.assign_timestamp_ns, ::protobuf::wire_format::WireTypeVarint);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
         self.cached_size.set(my_size);
         my_size
@@ -2860,6 +2472,9 @@ impl ::protobuf::Message for Latency {
         }
         if self.encoding_ns != 0 {
             os.write_uint64(3, self.encoding_ns)?;
+        }
+        if self.assign_timestamp_ns != 0 {
+            os.write_uint64(4, self.assign_timestamp_ns)?;
         }
         os.write_unknown_fields(self.get_unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -2918,6 +2533,11 @@ impl ::protobuf::Message for Latency {
                     |m: &Latency| { &m.encoding_ns },
                     |m: &mut Latency| { &mut m.encoding_ns },
                 ));
+                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeUint64>(
+                    "assign_timestamp_ns",
+                    |m: &Latency| { &m.assign_timestamp_ns },
+                    |m: &mut Latency| { &mut m.assign_timestamp_ns },
+                ));
                 ::protobuf::reflect::MessageDescriptor::new::<Latency>(
                     "Latency",
                     fields,
@@ -2943,6 +2563,7 @@ impl ::protobuf::Clear for Latency {
         self.clear_parsing_ns();
         self.clear_processing_ns();
         self.clear_encoding_ns();
+        self.clear_assign_timestamp_ns();
         self.unknown_fields.clear();
     }
 }
@@ -4566,462 +4187,6 @@ impl ::protobuf::reflect::ProtobufValue for Facet_ValType {
 }
 
 #[derive(PartialEq,Clone,Default)]
-pub struct SchemaNode {
-    // message fields
-    pub predicate: ::std::string::String,
-    pub field_type: ::std::string::String,
-    pub index: bool,
-    pub tokenizer: ::protobuf::RepeatedField<::std::string::String>,
-    pub reverse: bool,
-    pub count: bool,
-    pub list: bool,
-    pub upsert: bool,
-    pub lang: bool,
-    // special fields
-    pub unknown_fields: ::protobuf::UnknownFields,
-    pub cached_size: ::protobuf::CachedSize,
-}
-
-impl SchemaNode {
-    pub fn new() -> SchemaNode {
-        ::std::default::Default::default()
-    }
-
-    // string predicate = 1;
-
-    pub fn clear_predicate(&mut self) {
-        self.predicate.clear();
-    }
-
-    // Param is passed by value, moved
-    pub fn set_predicate(&mut self, v: ::std::string::String) {
-        self.predicate = v;
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_predicate(&mut self) -> &mut ::std::string::String {
-        &mut self.predicate
-    }
-
-    // Take field
-    pub fn take_predicate(&mut self) -> ::std::string::String {
-        ::std::mem::replace(&mut self.predicate, ::std::string::String::new())
-    }
-
-    pub fn get_predicate(&self) -> &str {
-        &self.predicate
-    }
-
-    // string type = 2;
-
-    pub fn clear_field_type(&mut self) {
-        self.field_type.clear();
-    }
-
-    // Param is passed by value, moved
-    pub fn set_field_type(&mut self, v: ::std::string::String) {
-        self.field_type = v;
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_field_type(&mut self) -> &mut ::std::string::String {
-        &mut self.field_type
-    }
-
-    // Take field
-    pub fn take_field_type(&mut self) -> ::std::string::String {
-        ::std::mem::replace(&mut self.field_type, ::std::string::String::new())
-    }
-
-    pub fn get_field_type(&self) -> &str {
-        &self.field_type
-    }
-
-    // bool index = 3;
-
-    pub fn clear_index(&mut self) {
-        self.index = false;
-    }
-
-    // Param is passed by value, moved
-    pub fn set_index(&mut self, v: bool) {
-        self.index = v;
-    }
-
-    pub fn get_index(&self) -> bool {
-        self.index
-    }
-
-    // repeated string tokenizer = 4;
-
-    pub fn clear_tokenizer(&mut self) {
-        self.tokenizer.clear();
-    }
-
-    // Param is passed by value, moved
-    pub fn set_tokenizer(&mut self, v: ::protobuf::RepeatedField<::std::string::String>) {
-        self.tokenizer = v;
-    }
-
-    // Mutable pointer to the field.
-    pub fn mut_tokenizer(&mut self) -> &mut ::protobuf::RepeatedField<::std::string::String> {
-        &mut self.tokenizer
-    }
-
-    // Take field
-    pub fn take_tokenizer(&mut self) -> ::protobuf::RepeatedField<::std::string::String> {
-        ::std::mem::replace(&mut self.tokenizer, ::protobuf::RepeatedField::new())
-    }
-
-    pub fn get_tokenizer(&self) -> &[::std::string::String] {
-        &self.tokenizer
-    }
-
-    // bool reverse = 5;
-
-    pub fn clear_reverse(&mut self) {
-        self.reverse = false;
-    }
-
-    // Param is passed by value, moved
-    pub fn set_reverse(&mut self, v: bool) {
-        self.reverse = v;
-    }
-
-    pub fn get_reverse(&self) -> bool {
-        self.reverse
-    }
-
-    // bool count = 6;
-
-    pub fn clear_count(&mut self) {
-        self.count = false;
-    }
-
-    // Param is passed by value, moved
-    pub fn set_count(&mut self, v: bool) {
-        self.count = v;
-    }
-
-    pub fn get_count(&self) -> bool {
-        self.count
-    }
-
-    // bool list = 7;
-
-    pub fn clear_list(&mut self) {
-        self.list = false;
-    }
-
-    // Param is passed by value, moved
-    pub fn set_list(&mut self, v: bool) {
-        self.list = v;
-    }
-
-    pub fn get_list(&self) -> bool {
-        self.list
-    }
-
-    // bool upsert = 8;
-
-    pub fn clear_upsert(&mut self) {
-        self.upsert = false;
-    }
-
-    // Param is passed by value, moved
-    pub fn set_upsert(&mut self, v: bool) {
-        self.upsert = v;
-    }
-
-    pub fn get_upsert(&self) -> bool {
-        self.upsert
-    }
-
-    // bool lang = 9;
-
-    pub fn clear_lang(&mut self) {
-        self.lang = false;
-    }
-
-    // Param is passed by value, moved
-    pub fn set_lang(&mut self, v: bool) {
-        self.lang = v;
-    }
-
-    pub fn get_lang(&self) -> bool {
-        self.lang
-    }
-}
-
-impl ::protobuf::Message for SchemaNode {
-    fn is_initialized(&self) -> bool {
-        true
-    }
-
-    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream) -> ::protobuf::ProtobufResult<()> {
-        while !is.eof()? {
-            let (field_number, wire_type) = is.read_tag_unpack()?;
-            match field_number {
-                1 => {
-                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.predicate)?;
-                },
-                2 => {
-                    ::protobuf::rt::read_singular_proto3_string_into(wire_type, is, &mut self.field_type)?;
-                },
-                3 => {
-                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
-                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
-                    }
-                    let tmp = is.read_bool()?;
-                    self.index = tmp;
-                },
-                4 => {
-                    ::protobuf::rt::read_repeated_string_into(wire_type, is, &mut self.tokenizer)?;
-                },
-                5 => {
-                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
-                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
-                    }
-                    let tmp = is.read_bool()?;
-                    self.reverse = tmp;
-                },
-                6 => {
-                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
-                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
-                    }
-                    let tmp = is.read_bool()?;
-                    self.count = tmp;
-                },
-                7 => {
-                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
-                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
-                    }
-                    let tmp = is.read_bool()?;
-                    self.list = tmp;
-                },
-                8 => {
-                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
-                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
-                    }
-                    let tmp = is.read_bool()?;
-                    self.upsert = tmp;
-                },
-                9 => {
-                    if wire_type != ::protobuf::wire_format::WireTypeVarint {
-                        return ::std::result::Result::Err(::protobuf::rt::unexpected_wire_type(wire_type));
-                    }
-                    let tmp = is.read_bool()?;
-                    self.lang = tmp;
-                },
-                _ => {
-                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
-                },
-            };
-        }
-        ::std::result::Result::Ok(())
-    }
-
-    // Compute sizes of nested messages
-    #[allow(unused_variables)]
-    fn compute_size(&self) -> u32 {
-        let mut my_size = 0;
-        if !self.predicate.is_empty() {
-            my_size += ::protobuf::rt::string_size(1, &self.predicate);
-        }
-        if !self.field_type.is_empty() {
-            my_size += ::protobuf::rt::string_size(2, &self.field_type);
-        }
-        if self.index != false {
-            my_size += 2;
-        }
-        for value in &self.tokenizer {
-            my_size += ::protobuf::rt::string_size(4, &value);
-        };
-        if self.reverse != false {
-            my_size += 2;
-        }
-        if self.count != false {
-            my_size += 2;
-        }
-        if self.list != false {
-            my_size += 2;
-        }
-        if self.upsert != false {
-            my_size += 2;
-        }
-        if self.lang != false {
-            my_size += 2;
-        }
-        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
-        self.cached_size.set(my_size);
-        my_size
-    }
-
-    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream) -> ::protobuf::ProtobufResult<()> {
-        if !self.predicate.is_empty() {
-            os.write_string(1, &self.predicate)?;
-        }
-        if !self.field_type.is_empty() {
-            os.write_string(2, &self.field_type)?;
-        }
-        if self.index != false {
-            os.write_bool(3, self.index)?;
-        }
-        for v in &self.tokenizer {
-            os.write_string(4, &v)?;
-        };
-        if self.reverse != false {
-            os.write_bool(5, self.reverse)?;
-        }
-        if self.count != false {
-            os.write_bool(6, self.count)?;
-        }
-        if self.list != false {
-            os.write_bool(7, self.list)?;
-        }
-        if self.upsert != false {
-            os.write_bool(8, self.upsert)?;
-        }
-        if self.lang != false {
-            os.write_bool(9, self.lang)?;
-        }
-        os.write_unknown_fields(self.get_unknown_fields())?;
-        ::std::result::Result::Ok(())
-    }
-
-    fn get_cached_size(&self) -> u32 {
-        self.cached_size.get()
-    }
-
-    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
-        &self.unknown_fields
-    }
-
-    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
-        &mut self.unknown_fields
-    }
-
-    fn as_any(&self) -> &::std::any::Any {
-        self as &::std::any::Any
-    }
-    fn as_any_mut(&mut self) -> &mut ::std::any::Any {
-        self as &mut ::std::any::Any
-    }
-    fn into_any(self: Box<Self>) -> ::std::boxed::Box<::std::any::Any> {
-        self
-    }
-
-    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
-        Self::descriptor_static()
-    }
-
-    fn new() -> SchemaNode {
-        SchemaNode::new()
-    }
-
-    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
-        static mut descriptor: ::protobuf::lazy::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::lazy::Lazy {
-            lock: ::protobuf::lazy::ONCE_INIT,
-            ptr: 0 as *const ::protobuf::reflect::MessageDescriptor,
-        };
-        unsafe {
-            descriptor.get(|| {
-                let mut fields = ::std::vec::Vec::new();
-                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
-                    "predicate",
-                    |m: &SchemaNode| { &m.predicate },
-                    |m: &mut SchemaNode| { &mut m.predicate },
-                ));
-                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
-                    "type",
-                    |m: &SchemaNode| { &m.field_type },
-                    |m: &mut SchemaNode| { &mut m.field_type },
-                ));
-                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBool>(
-                    "index",
-                    |m: &SchemaNode| { &m.index },
-                    |m: &mut SchemaNode| { &mut m.index },
-                ));
-                fields.push(::protobuf::reflect::accessor::make_repeated_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
-                    "tokenizer",
-                    |m: &SchemaNode| { &m.tokenizer },
-                    |m: &mut SchemaNode| { &mut m.tokenizer },
-                ));
-                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBool>(
-                    "reverse",
-                    |m: &SchemaNode| { &m.reverse },
-                    |m: &mut SchemaNode| { &mut m.reverse },
-                ));
-                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBool>(
-                    "count",
-                    |m: &SchemaNode| { &m.count },
-                    |m: &mut SchemaNode| { &mut m.count },
-                ));
-                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBool>(
-                    "list",
-                    |m: &SchemaNode| { &m.list },
-                    |m: &mut SchemaNode| { &mut m.list },
-                ));
-                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBool>(
-                    "upsert",
-                    |m: &SchemaNode| { &m.upsert },
-                    |m: &mut SchemaNode| { &mut m.upsert },
-                ));
-                fields.push(::protobuf::reflect::accessor::make_simple_field_accessor::<_, ::protobuf::types::ProtobufTypeBool>(
-                    "lang",
-                    |m: &SchemaNode| { &m.lang },
-                    |m: &mut SchemaNode| { &mut m.lang },
-                ));
-                ::protobuf::reflect::MessageDescriptor::new::<SchemaNode>(
-                    "SchemaNode",
-                    fields,
-                    file_descriptor_proto()
-                )
-            })
-        }
-    }
-
-    fn default_instance() -> &'static SchemaNode {
-        static mut instance: ::protobuf::lazy::Lazy<SchemaNode> = ::protobuf::lazy::Lazy {
-            lock: ::protobuf::lazy::ONCE_INIT,
-            ptr: 0 as *const SchemaNode,
-        };
-        unsafe {
-            instance.get(SchemaNode::new)
-        }
-    }
-}
-
-impl ::protobuf::Clear for SchemaNode {
-    fn clear(&mut self) {
-        self.clear_predicate();
-        self.clear_field_type();
-        self.clear_index();
-        self.clear_tokenizer();
-        self.clear_reverse();
-        self.clear_count();
-        self.clear_list();
-        self.clear_upsert();
-        self.clear_lang();
-        self.unknown_fields.clear();
-    }
-}
-
-impl ::std::fmt::Debug for SchemaNode {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-        ::protobuf::text_format::fmt(self, f)
-    }
-}
-
-impl ::protobuf::reflect::ProtobufValue for SchemaNode {
-    fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
-        ::protobuf::reflect::ProtobufValueRef::Message(self)
-    }
-}
-
-#[derive(PartialEq,Clone,Default)]
 pub struct LoginRequest {
     // message fields
     pub userid: ::std::string::String,
@@ -5474,47 +4639,43 @@ impl ::protobuf::reflect::ProtobufValue for Jwt {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\tapi.proto\x12\x03api\"\xe5\x01\n\x07Request\x12\x14\n\x05query\x18\
-    \x01\x20\x01(\tR\x05query\x12*\n\x04vars\x18\x02\x20\x03(\x0b2\x16.api.R\
-    equest.VarsEntryR\x04vars\x12\x19\n\x08start_ts\x18\r\x20\x01(\x04R\x07s\
-    tartTs\x12'\n\x08lin_read\x18\x0e\x20\x01(\x0b2\x0c.api.LinReadR\x07linR\
-    ead\x12\x1b\n\tread_only\x18\x0f\x20\x01(\x08R\x08readOnly\x1a7\n\tVarsE\
-    ntry\x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\x12\x14\n\x05value\x18\
-    \x02\x20\x01(\tR\x05value:\x028\x01\"\x92\x01\n\x08Response\x12\x12\n\
-    \x04json\x18\x01\x20\x01(\x0cR\x04json\x12'\n\x06schema\x18\x02\x20\x03(\
-    \x0b2\x0f.api.SchemaNodeR\x06schema\x12!\n\x03txn\x18\x03\x20\x01(\x0b2\
-    \x0f.api.TxnContextR\x03txn\x12&\n\x07latency\x18\x0c\x20\x01(\x0b2\x0c.\
-    api.LatencyR\x07latency\"\xc3\x01\n\x08Assigned\x12+\n\x04uids\x18\x01\
-    \x20\x03(\x0b2\x17.api.Assigned.UidsEntryR\x04uids\x12)\n\x07context\x18\
-    \x02\x20\x01(\x0b2\x0f.api.TxnContextR\x07context\x12&\n\x07latency\x18\
-    \x0c\x20\x01(\x0b2\x0c.api.LatencyR\x07latency\x1a7\n\tUidsEntry\x12\x10\
-    \n\x03key\x18\x01\x20\x01(\tR\x03key\x12\x14\n\x05value\x18\x02\x20\x01(\
-    \tR\x05value:\x028\x01\"\xae\x02\n\x08Mutation\x12\x19\n\x08set_json\x18\
-    \x01\x20\x01(\x0cR\x07setJson\x12\x1f\n\x0bdelete_json\x18\x02\x20\x01(\
-    \x0cR\ndeleteJson\x12\x1d\n\nset_nquads\x18\x03\x20\x01(\x0cR\tsetNquads\
-    \x12\x1d\n\ndel_nquads\x18\x04\x20\x01(\x0cR\tdelNquads\x12\x1c\n\x03set\
-    \x18\n\x20\x03(\x0b2\n.api.NQuadR\x03set\x12\x1c\n\x03del\x18\x0b\x20\
-    \x03(\x0b2\n.api.NQuadR\x03del\x12\x19\n\x08start_ts\x18\r\x20\x01(\x04R\
-    \x07startTs\x12\x1d\n\ncommit_now\x18\x0e\x20\x01(\x08R\tcommitNow\x122\
-    \n\x15ignore_index_conflict\x18\x0f\x20\x01(\x08R\x13ignoreIndexConflict\
-    \"[\n\tOperation\x12\x16\n\x06schema\x18\x01\x20\x01(\tR\x06schema\x12\
-    \x1b\n\tdrop_attr\x18\x02\x20\x01(\tR\x08dropAttr\x12\x19\n\x08drop_all\
-    \x18\x03\x20\x01(\x08R\x07dropAll\"\x1d\n\x07Payload\x12\x12\n\x04Data\
-    \x18\x01\x20\x01(\x0cR\x04data\"\xb1\x01\n\nTxnContext\x12\x19\n\x08star\
-    t_ts\x18\x01\x20\x01(\x04R\x07startTs\x12\x1b\n\tcommit_ts\x18\x02\x20\
+    \n\tapi.proto\x12\x03api\"\xa9\x02\n\x07Request\x12\x19\n\x08start_ts\
+    \x18\x01\x20\x01(\x04R\x07startTs\x12\x14\n\x05query\x18\x04\x20\x01(\tR\
+    \x05query\x12*\n\x04vars\x18\x05\x20\x03(\x0b2\x16.api.Request.VarsEntry\
+    R\x04vars\x12\x1b\n\tread_only\x18\x06\x20\x01(\x08R\x08readOnly\x12\x1f\
+    \n\x0bbest_effort\x18\x07\x20\x01(\x08R\nbestEffort\x12+\n\tmutations\
+    \x18\x0c\x20\x03(\x0b2\r.api.MutationR\tmutations\x12\x1d\n\ncommit_now\
+    \x18\r\x20\x01(\x08R\tcommitNow\x1a7\n\tVarsEntry\x12\x10\n\x03key\x18\
+    \x01\x20\x01(\tR\x03key\x12\x14\n\x05value\x18\x02\x20\x01(\tR\x05value:\
+    \x028\x01\"\xcf\x01\n\x08Response\x12\x12\n\x04json\x18\x01\x20\x01(\x0c\
+    R\x04json\x12!\n\x03txn\x18\x02\x20\x01(\x0b2\x0f.api.TxnContextR\x03txn\
+    \x12&\n\x07latency\x18\x03\x20\x01(\x0b2\x0c.api.LatencyR\x07latency\x12\
+    +\n\x04uids\x18\x0c\x20\x03(\x0b2\x17.api.Response.UidsEntryR\x04uids\
+    \x1a7\n\tUidsEntry\x12\x10\n\x03key\x18\x01\x20\x01(\tR\x03key\x12\x14\n\
+    \x05value\x18\x02\x20\x01(\tR\x05value:\x028\x01\"\xf3\x01\n\x08Mutation\
+    \x12\x19\n\x08set_json\x18\x01\x20\x01(\x0cR\x07setJson\x12\x1f\n\x0bdel\
+    ete_json\x18\x02\x20\x01(\x0cR\ndeleteJson\x12\x1d\n\nset_nquads\x18\x03\
+    \x20\x01(\x0cR\tsetNquads\x12\x1d\n\ndel_nquads\x18\x04\x20\x01(\x0cR\td\
+    elNquads\x12\x1c\n\x03set\x18\x05\x20\x03(\x0b2\n.api.NQuadR\x03set\x12\
+    \x1c\n\x03del\x18\x06\x20\x03(\x0b2\n.api.NQuadR\x03del\x12\x12\n\x04con\
+    d\x18\t\x20\x01(\tR\x04cond\x12\x1d\n\ncommit_now\x18\x0e\x20\x01(\x08R\
+    \tcommitNow\"\xe5\x01\n\tOperation\x12\x16\n\x06schema\x18\x01\x20\x01(\
+    \tR\x06schema\x12\x1b\n\tdrop_attr\x18\x02\x20\x01(\tR\x08dropAttr\x12\
+    \x19\n\x08drop_all\x18\x03\x20\x01(\x08R\x07dropAll\x12.\n\x07drop_op\
+    \x18\x04\x20\x01(\x0e2\x15.api.Operation.DropOpR\x06dropOp\x12\x1d\n\ndr\
+    op_value\x18\x05\x20\x01(\tR\tdropValue\"9\n\x06DropOp\x12\x08\n\x04NONE\
+    \x10\0\x12\x07\n\x03ALL\x10\x01\x12\x08\n\x04DATA\x10\x02\x12\x08\n\x04A\
+    TTR\x10\x03\x12\x08\n\x04TYPE\x10\x04\"\x1d\n\x07Payload\x12\x12\n\x04Da\
+    ta\x18\x01\x20\x01(\x0cR\x04data\"\x88\x01\n\nTxnContext\x12\x19\n\x08st\
+    art_ts\x18\x01\x20\x01(\x04R\x07startTs\x12\x1b\n\tcommit_ts\x18\x02\x20\
     \x01(\x04R\x08commitTs\x12\x18\n\x07aborted\x18\x03\x20\x01(\x08R\x07abo\
     rted\x12\x12\n\x04keys\x18\x04\x20\x03(\tR\x04keys\x12\x14\n\x05preds\
-    \x18\x05\x20\x03(\tR\x05preds\x12'\n\x08lin_read\x18\r\x20\x01(\x0b2\x0c\
-    .api.LinReadR\x07linRead\"\x07\n\x05Check\"\x1b\n\x07Version\x12\x10\n\
-    \x03tag\x18\x01\x20\x01(\tR\x03tag\"\xd3\x01\n\x07LinRead\x12'\n\x03ids\
-    \x18\x01\x20\x03(\x0b2\x15.api.LinRead.IdsEntryR\x03ids\x127\n\nsequenci\
-    ng\x18\x02\x20\x01(\x0e2\x17.api.LinRead.SequencingR\nsequencing\x1a6\n\
-    \x08IdsEntry\x12\x10\n\x03key\x18\x01\x20\x01(\rR\x03key\x12\x14\n\x05va\
-    lue\x18\x02\x20\x01(\x04R\x05value:\x028\x01\".\n\nSequencing\x12\x0f\n\
-    \x0bCLIENT_SIDE\x10\0\x12\x0f\n\x0bSERVER_SIDE\x10\x01\"n\n\x07Latency\
-    \x12\x1d\n\nparsing_ns\x18\x01\x20\x01(\x04R\tparsingNs\x12#\n\rprocessi\
-    ng_ns\x18\x02\x20\x01(\x04R\x0cprocessingNs\x12\x1f\n\x0bencoding_ns\x18\
-    \x03\x20\x01(\x04R\nencodingNs\"\xd9\x01\n\x05NQuad\x12\x18\n\x07subject\
+    \x18\x05\x20\x03(\tR\x05preds\"\x07\n\x05Check\"\x1b\n\x07Version\x12\
+    \x10\n\x03tag\x18\x01\x20\x01(\tR\x03tag\"\x9e\x01\n\x07Latency\x12\x1d\
+    \n\nparsing_ns\x18\x01\x20\x01(\x04R\tparsingNs\x12#\n\rprocessing_ns\
+    \x18\x02\x20\x01(\x04R\x0cprocessingNs\x12\x1f\n\x0bencoding_ns\x18\x03\
+    \x20\x01(\x04R\nencodingNs\x12.\n\x13assign_timestamp_ns\x18\x04\x20\x01\
+    (\x04R\x11assignTimestampNs\"\xd9\x01\n\x05NQuad\x12\x18\n\x07subject\
     \x18\x01\x20\x01(\tR\x07subject\x12\x1c\n\tpredicate\x18\x02\x20\x01(\tR\
     \tpredicate\x12\x1b\n\tobject_id\x18\x03\x20\x01(\tR\x08objectId\x12-\n\
     \x0cobject_value\x18\x04\x20\x01(\x0b2\n.api.ValueR\x0bobjectValue\x12\
@@ -5535,24 +4696,17 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     R\x07valType\x12\x16\n\x06tokens\x18\x04\x20\x03(\tR\x06tokens\x12\x14\n\
     \x05alias\x18\x05\x20\x01(\tR\x05alias\"A\n\x07ValType\x12\n\n\x06STRING\
     \x10\0\x12\x07\n\x03INT\x10\x01\x12\t\n\x05FLOAT\x10\x02\x12\x08\n\x04BO\
-    OL\x10\x03\x12\x0c\n\x08DATETIME\x10\x04\"\xe2\x01\n\nSchemaNode\x12\x1c\
-    \n\tpredicate\x18\x01\x20\x01(\tR\tpredicate\x12\x12\n\x04type\x18\x02\
-    \x20\x01(\tR\x04type\x12\x14\n\x05index\x18\x03\x20\x01(\x08R\x05index\
-    \x12\x1c\n\ttokenizer\x18\x04\x20\x03(\tR\ttokenizer\x12\x18\n\x07revers\
-    e\x18\x05\x20\x01(\x08R\x07reverse\x12\x14\n\x05count\x18\x06\x20\x01(\
-    \x08R\x05count\x12\x12\n\x04list\x18\x07\x20\x01(\x08R\x04list\x12\x16\n\
-    \x06upsert\x18\x08\x20\x01(\x08R\x06upsert\x12\x12\n\x04lang\x18\t\x20\
-    \x01(\x08R\x04lang\"g\n\x0cLoginRequest\x12\x16\n\x06userid\x18\x01\x20\
-    \x01(\tR\x06userid\x12\x1a\n\x08password\x18\x02\x20\x01(\tR\x08password\
-    \x12#\n\rrefresh_token\x18\x03\x20\x01(\tR\x0crefreshToken\"E\n\x03Jwt\
-    \x12\x1d\n\naccess_jwt\x18\x01\x20\x01(\tR\taccessJwt\x12\x1f\n\x0brefre\
-    sh_jwt\x18\x02\x20\x01(\tR\nrefreshJwt2\x91\x02\n\x06Dgraph\x12+\n\x05Lo\
-    gin\x12\x11.api.LoginRequest\x1a\r.api.Response\"\0\x12&\n\x05Query\x12\
-    \x0c.api.Request\x1a\r.api.Response\"\0\x12(\n\x06Mutate\x12\r.api.Mutat\
-    ion\x1a\r.api.Assigned\"\0\x12'\n\x05Alter\x12\x0e.api.Operation\x1a\x0c\
-    .api.Payload\"\0\x123\n\rCommitOrAbort\x12\x0f.api.TxnContext\x1a\x0f.ap\
-    i.TxnContext\"\0\x12*\n\x0cCheckVersion\x12\n.api.Check\x1a\x0c.api.Vers\
-    ion\"\0B\x18\n\tio.dgraphB\x0bDgraphProtob\x06proto3\
+    OL\x10\x03\x12\x0c\n\x08DATETIME\x10\x04\"g\n\x0cLoginRequest\x12\x16\n\
+    \x06userid\x18\x01\x20\x01(\tR\x06userid\x12\x1a\n\x08password\x18\x02\
+    \x20\x01(\tR\x08password\x12#\n\rrefresh_token\x18\x03\x20\x01(\tR\x0cre\
+    freshToken\"E\n\x03Jwt\x12\x1d\n\naccess_jwt\x18\x01\x20\x01(\tR\taccess\
+    Jwt\x12\x1f\n\x0brefresh_jwt\x18\x02\x20\x01(\tR\nrefreshJwt2\xe7\x01\n\
+    \x06Dgraph\x12+\n\x05Login\x12\x11.api.LoginRequest\x1a\r.api.Response\"\
+    \0\x12&\n\x05Query\x12\x0c.api.Request\x1a\r.api.Response\"\0\x12'\n\x05\
+    Alter\x12\x0e.api.Operation\x1a\x0c.api.Payload\"\0\x123\n\rCommitOrAbor\
+    t\x12\x0f.api.TxnContext\x1a\x0f.api.TxnContext\"\0\x12*\n\x0cCheckVersi\
+    on\x12\n.api.Check\x1a\x0c.api.Version\"\0B\x18\n\tio.dgraphB\x0bDgraphP\
+    rotob\x06proto3\
 ";
 
 static mut file_descriptor_proto_lazy: ::protobuf::lazy::Lazy<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::lazy::Lazy {
