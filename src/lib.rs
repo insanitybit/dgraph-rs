@@ -1,5 +1,3 @@
-#![feature(async_await)]
-
 extern crate futures;
 
 extern crate grpc;
@@ -232,8 +230,10 @@ mod tests {
     #[test]
     fn test_query() {
         async_std::task::block_on(async {
+            println!("Connecting to local dg");
             let dg = local_dgraph_client();
             let mut txn = dg.new_txn();
+            println!("Querying local dg");
             let query_res: Value = txn.query(r#"
                 {
                   q0(func: has(node_key)) {
@@ -262,19 +262,36 @@ mod tests {
                 }
                 "#;
 
-            let mu = api::Mutation {
-                set_nquads: br#"
-                uid(p) <node_key> "{453120d4-5c9f-43f6-b7af-28b376b3a993}" .
-                uid(p) <process_name> "foo.exe" ."#.to_vec(),
-                ..Default::default()
+            let j_mut = serde_json::json!{
+                {
+                    "query": query,
+                    "set": {
+                        "uid": "uid(p)",
+                        "node_key": "{453120d4-5c9f-43f6-b7af-28b376b3a993}" ,
+                        "process_name": "bar.exe",
+                    }
+
+                }
             };
 
+            let mu = api::Mutation {
+                set_json: j_mut.to_string().into_bytes(),
+                ..Default::default()
+            };
+//            let mu = api::Mutation {
+//                set_json: br#"
+//                uid(p) <node_key> "{453120d4-5c9f-43f6-b7af-28b376b3a993}" .
+//                uid(p) <process_name> "foo.exe" ."#.to_vec(),
+//                ..Default::default()
+//            };
+
             let txn = dg.new_txn();
-            txn.upsert(
+            let txn_res = txn.upsert(
                 query, mu,
             )
                 .await
                 .expect("Request to dgraph failed");
+            dbg!(txn_res);
         });
     }
 }
