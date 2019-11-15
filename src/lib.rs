@@ -98,7 +98,7 @@ impl<'a> Txn<'a> {
         ).await
     }
 
-    pub async fn upsert(mut self, q: impl Into<String>, mut mu: api::Mutation) -> Result<api::Response, DgraphError> {
+    pub async fn upsert(&mut self, q: impl Into<String>, mut mu: api::Mutation) -> Result<api::Response, DgraphError> {
         mu.commit_now = true;
         self._do(
             api::Request {
@@ -285,7 +285,7 @@ mod tests {
 //                ..Default::default()
 //            };
 
-            let txn = dg.new_txn();
+            let mut txn = dg.new_txn();
             let txn_res = txn.upsert(
                 query, mu,
             )
