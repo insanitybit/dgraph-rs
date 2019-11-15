@@ -49,6 +49,30 @@ impl DgraphClient
         }
     }
 
+
+    pub fn new_read_only(&self) -> Txn {
+        Txn {
+            context: Default::default(),
+            finished: false,
+            read_only: true,
+            best_effort: false,
+            mutated: false,
+            dc: self.any_client(),
+        }
+    }
+
+
+    pub fn new_best_effort(&self) -> Txn {
+        Txn {
+            context: Default::default(),
+            finished: false,
+            read_only: true,
+            best_effort: true,
+            mutated: false,
+            dc: self.any_client(),
+        }
+    }
+
     fn any_client(&self) -> &api_grpc::DgraphClient {
         let mut rng = rand_xoshiro::Xoroshiro128Plus::from_seed(self.rng_seed);
 
@@ -264,13 +288,9 @@ mod tests {
 
             let j_mut = serde_json::json!{
                 {
-                    "query": query,
-                    "set": {
-                        "uid": "uid(p)",
-                        "node_key": "{453120d4-5c9f-43f6-b7af-28b376b3a993}" ,
-                        "process_name": "bar.exe",
-                    }
-
+                    "uid": "uid(p)",
+                    "node_key": "{453120d4-5c9f-43f6-b7af-28b376b3a993}",
+                    "process_name": "bar.exe",
                 }
             };
 
@@ -278,13 +298,6 @@ mod tests {
                 set_json: j_mut.to_string().into_bytes(),
                 ..Default::default()
             };
-//            let mu = api::Mutation {
-//                set_json: br#"
-//                uid(p) <node_key> "{453120d4-5c9f-43f6-b7af-28b376b3a993}" .
-//                uid(p) <process_name> "foo.exe" ."#.to_vec(),
-//                ..Default::default()
-//            };
-
             let mut txn = dg.new_txn();
             let txn_res = txn.upsert(
                 query, mu,
@@ -292,6 +305,83 @@ mod tests {
                 .await
                 .expect("Request to dgraph failed");
             dbg!(txn_res);
+
+            txn.commit_or_abort().await.unwrap();
+
+//            let mut txn = dg.new_txn();
+//            let query_res: Value = txn.query(r#"
+//                {
+//                  q0(func: has(node_key)) {
+//                    uid
+//                  }
+//                }
+//            "#)
+//                .await
+//                .map(|res| serde_json::from_slice(&res.json))
+//                .expect("Dgraph query failed")
+//                .expect("Json deserialize failed");
+////
+//            dbg!(query_res)
+        });
+    }
+
+
+    #[test]
+    fn test_txn_query_mutate() {
+        async_std::task::block_on(async {
+            let dg = local_dgraph_client();
+
+            let query = r#"
+                {
+                  q0(func: eq(node_key, "{453120d4-5c9f-43f6-b7af-28b376b3a993}")) {
+                    uid
+                  }
+                }
+                "#;
+
+            let mut txn = dg.new_read_only();
+
+            let query_res: Value = txn.query(query).await
+                .map(|res| serde_json::from_slice(&res.json))
+                .expect("query")
+                .expect("json");
+
+            let uid = query_res.get("q0")
+                .and_then(|res| res.get(0))
+                .and_then(|uid| uid.get("uid"))
+                .and_then(|uid| uid.as_str());
+//                .to_string();
+            dbg!(&uid);
+
+            let mut set = serde_json::json!({
+                "node_key": "{453120d4-5c9f-43f6-b7af-28b376b3a993}",
+                "process_name": "bar.exe",
+            });
+
+            if let Some(uid) = uid {
+                set["uid"] = uid.into();
+            }
+            let j_mut = set;
+
+            let mu = api::Mutation {
+                set_json: j_mut.to_string().into_bytes(),
+                ..Default::default()
+            };
+            let mut txn = dg.new_txn();
+            let txn_res = txn.mutate(mu)
+                .await
+                .expect("Request to dgraph failed");
+            dbg!(txn_res);
+
+            txn.commit_or_abort().await.unwrap();
+
+            let mut txn = dg.new_read_only();
+
+            let query_res: Value = txn.query(query).await
+                .map(|res| serde_json::from_slice(&res.json))
+                .expect("query")
+                .expect("json");
+            dbg!(query_res)
         });
     }
 }
