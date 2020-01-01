@@ -325,6 +325,33 @@ mod tests {
         });
     }
 
+    async fn node_key_to_uid(dg: &DgraphClient, node_key: &str) -> Result<Option<String>, DgraphError> {
+
+        let mut txn = dg.new_read_only();
+
+        const QUERY: & str = r"
+        query q0($a: string)
+        {
+            q0(func: eq(node_key, $a), first: 1) {
+                uid
+            }
+        }
+        ";
+
+        let mut vars = HashMap::new();
+        vars.insert("$a".to_string(), node_key.into());
+
+        let query_res: Value = txn.query_with_vars(QUERY, vars).await
+            .map(|res| serde_json::from_slice(&res.json))?.expect("json");
+
+        let uid = query_res.get("q0")
+            .and_then(|res| res.get(0))
+            .and_then(|uid| uid.get("uid"))
+            .and_then(|uid| uid.as_str())
+            .map(String::from);
+
+        Ok(uid)
+    }
 
     #[test]
     fn test_txn_query_mutate() {
@@ -375,13 +402,17 @@ mod tests {
 
             txn.commit_or_abort().await.unwrap();
 
-            let mut txn = dg.new_read_only();
+//            let mut txn = dg.new_read_only();
+//
+//            let query_res: Value = txn.query(query).await
+//                .map(|res| serde_json::from_slice(&res.json))
+//                .expect("query")
+//                .expect("json");
 
-            let query_res: Value = txn.query(query).await
-                .map(|res| serde_json::from_slice(&res.json))
-                .expect("query")
-                .expect("json");
-            dbg!(query_res)
+            let k = node_key_to_uid(&dg, "{453120d4-5c9f-43f6-b7af-28b376b3a993}")
+                .await
+                .expect("nktu");
+            dbg!(k )
         });
     }
 }
